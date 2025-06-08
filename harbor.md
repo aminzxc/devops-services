@@ -28,7 +28,7 @@ data_volume: /data/harbor
 ### change config & restart `harbor`
 ```
 cd /path/to/harbor
-./prepare
+./prepare      #Checks and updates configurations
 docker-compose down
 docker-compose up -d
 
