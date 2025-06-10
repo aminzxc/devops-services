@@ -30,7 +30,7 @@ docker run --rm -it \
  wagoodman/dive:latest \
  <image-name>/<tag>
 ```
-### ### What is `slimtoolkit`?
+### What is `slimtoolkit`?
 ```
 With this project, you can optimize the size of the created images and create a new image
 ```
