@@ -30,6 +30,27 @@ docker run --rm -it \
  wagoodman/dive:latest \
  <image-name>/<tag>
 ```
+### ### What is `slimtoolkit`?
+```
+With this project, you can optimize the size of the created images and create a new image
+```
+### install & use
+```
+wget https://github.com/slimtoolkit/slim/releases/download/1.40.11/dist_linux.tar.gz
+tar -xzvf dist_linux.tar.gz
+./docker-slim build \
+  --tag front:slim \
+  --http-probe=true \
+  --http-probe-cmd "GET /" \
+  --include-path /app/.next \
+  --include-path /app/node_modules \
+  --include-path /app/package.json \
+  --include-path /etc/passwd \
+  --include-path /etc/group \
+  --continue-after=probe \
+  <image>:<tag>
+
+```
 ### Docker Image Reduction Project
 ```
 https://github.com/slimtoolkit/slim
