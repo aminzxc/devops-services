@@ -30,3 +30,7 @@ docker run --rm -it \
  wagoodman/dive:latest \
  <image-name>/<tag>
 ```
+### Docker Image Reduction Project
+```
+https://github.com/slimtoolkit/slim
+```
