@@ -95,5 +95,5 @@ Here are some best-practice recommendations for optimizing Harbor in a productio
 
 > ℹ️ It's important to always schedule GC after retention policies to ensure actual disk space is freed.
 ### Setting to keep the last 3 images and delete older images
-![config](Practical-tools/images/project-policy.png)
+![config](./images/project-policy.png)
 
