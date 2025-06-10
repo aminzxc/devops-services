@@ -14,3 +14,19 @@ https://github.com/hadolint/hadolint
 ```
 docker run --rm -i hadolint/hadolint < Dockerfile
 ```
+
+### What is `dive`?
+```
+A tool for exploring a Docker image, layer contents, and discovering ways to shrink the size of your Docker/OCI image
+```
+### proje
+```
+https://github.com/wagoodman/dive
+```
+### install & use
+```
+docker run --rm -it \
+ -v /var/run/docker.sock:/var/run/docker.sock \
+ wagoodman/dive:latest \
+ <image-name>/<tag>
+```
