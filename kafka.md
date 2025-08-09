@@ -300,7 +300,7 @@
 
 
 ```
-kafka UI
+### kafka UI
 ```
   kafka-ui:
     image: provectuslabs/kafka-ui:latest
