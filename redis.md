@@ -178,6 +178,23 @@
         - "traefik.http.middlewares.redis-auth.basicauth.removeheader=true"
         - "traefik.http.middlewares.redis-auth.basicauth.realm=RedisInsight"
         - "traefik.http.routers.redis-insight.middlewares=redis-auth@docker"
+volumes:
+  redis1-data:
+  redis2-data:
+  redis3-data:
+  redis4-data:
+  redis5-data:
+  redis6-data:
+```
+### check config file
+```
+docker compose -f file.yml config
+docker stack config -c file.yml
+```
+### check status cluster `redis cli` 
+```
+cluster nodes
+cluster info
 ```
 ### Running the cluster to join nodes
 ```
@@ -186,7 +203,7 @@ docker exec -it redis1 bash
 ```
 redis-cli --cluster create redis1:6379 redis2:6379 redis3:6379 redis4:6379 redis5:6379 redis6:6379 --cluster-replicas 1
 ```
-#########################################################
+### redis cludter `MASTER & SLAVE`
   redis-master:
     image: redis:7.4.2
     hostname: redis-master
