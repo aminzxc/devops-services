@@ -340,6 +340,197 @@
         reservations:
           memory: 256M
 ```
+### kafka cluster with zookeper cluster
+```
+  zookeeper1:
+    hostname: zookeeper1
+    image: confluentinc/cp-zookeeper:latest
+    user: "0:0"
+    environment:
+        - ZOOKEEPER_SERVER_ID=1
+        - ZOOKEEPER_CLIENT_PORT=22181
+        - ZOOKEEPER_TICK_TIME=2000
+        - ZOOKEEPER_INIT_LIMIT=5
+        - ZOOKEEPER_SYNC_LIMIT=2
+        - ZOOKEEPER_SERVERS=zookeeper1:22888:23888;zookeeper2:32888:33888;zookeeper3:42888:43888
+    ports:
+      - "22181:22181"
+      - "22888:22888"
+      - "23888:23888"
+    volumes:
+      - type: "volume"
+        source: "zookeeper1"
+        target: "/var/lib/zookeeper/data"
+        volume:
+          nocopy: true
+      - type: "volume"
+        source: "zookeeper1-logs"
+        target: "/var/lib/zookeeper/log"
+        volume:
+          nocopy: true
+    deploy:
+      replicas: 1
+      placement:
+        constraints:
+          - node.labels.master.replica == 1
+    networks:
+      - stage
+
+  zookeeper2:
+    hostname: zookeeper2
+    image: confluentinc/cp-zookeeper:latest
+    user: "0:0"
+    environment:
+        - ZOOKEEPER_SERVER_ID=2
+        - ZOOKEEPER_CLIENT_PORT=32181
+        - ZOOKEEPER_TICK_TIME=2000
+        - ZOOKEEPER_INIT_LIMIT=5
+        - ZOOKEEPER_SYNC_LIMIT=2
+        - ZOOKEEPER_SERVERS=zookeeper1:22888:23888;zookeeper2:32888:33888;zookeeper3:42888:43888
+    ports:
+      - "32181:32181"
+      - "32888:32888"
+      - "33888:33888"
+    volumes:
+      - type: "volume"
+        source: "zookeeper2"
+        target: "/var/lib/zookeeper/data"
+        volume:
+          nocopy: true
+      - type: "volume"
+        source: "zookeeper2-logs"
+        target: "/var/lib/zookeeper/log"
+        volume:
+          nocopy: true
+    deploy:
+      replicas: 1
+      placement:
+        constraints:
+          - node.labels.master.replica == 2
+    networks:
+      - stage
+
+  zookeeper3:
+    hostname: zookeeper3
+    image: confluentinc/cp-zookeeper:latest
+    user: "0:0"
+    environment:
+        - ZOOKEEPER_SERVER_ID=3
+        - ZOOKEEPER_CLIENT_PORT=42181
+        - ZOOKEEPER_TICK_TIME=2000
+        - ZOOKEEPER_INIT_LIMIT=5
+        - ZOOKEEPER_SYNC_LIMIT=2
+        - ZOOKEEPER_SERVERS=zookeeper1:22888:23888;zookeeper2:32888:33888;zookeeper3:42888:43888
+    ports:
+      - "42181:42181"
+      - "42888:42888"
+      - "43888:43888"
+    volumes:
+      - type: "volume"
+        source: "zookeeper3"
+        target: "/var/lib/zookeeper/data"
+        volume:
+          nocopy: true
+      - type: "volume"
+        source: "zookeeper3-logs"
+        target: "/var/lib/zookeeper/log"
+        volume:
+          nocopy: true
+    deploy:
+      replicas: 1
+      placement:
+        constraints:
+          - node.labels.master.replica == 3
+    networks:
+      - stage
+
+  kafka1:
+    hostname: kafka1
+    image: confluentinc/cp-kafka:latest
+    user: "0:0"
+    ports:
+     - 19092:19092
+    volumes:
+      - type: "volume"
+        source: "kafka1"
+        target: "/var/lib/kafka/data"
+        volume:
+          nocopy: true
+    depends_on:
+      - zookeeper1
+      - zookeeper2
+      - zookeeper3
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: 192.168.20.4:22181,192.168.20.5:32181,192.168.20.6:42181
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://192.168.20.4:19092
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: "false"
+      KAFKA_DELETE_TOPIC_ENABLE: "true"
+    deploy:
+      placement:
+        constraints:
+          - node.labels.master.replica == 1
+    networks:
+      - stage
+
+  kafka2:
+    hostname: kafka2
+    image: confluentinc/cp-kafka:latest
+    user: "0:0"
+    ports:
+     - 29092:29092
+    volumes:
+      - type: "volume"
+        source: "kafka2"
+        target: "/var/lib/kafka/data"
+        volume:
+          nocopy: true
+    depends_on:
+      - zookeeper1
+      - zookeeper2
+      - zookeeper3
+    environment:
+      KAFKA_BROKER_ID: 2
+      KAFKA_ZOOKEEPER_CONNECT: 192.168.20.4:22181,192.168.20.5:32181,192.168.20.6:42181
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://192.168.20.5:29092
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: "false"
+      KAFKA_DELETE_TOPIC_ENABLE: "true"
+    deploy:
+      placement:
+        constraints:
+          - node.labels.master.replica == 2
+    networks:
+      - stage
+
+  kafka3:
+    hostname: kafka3
+    image: confluentinc/cp-kafka:latest
+    user: "0:0"
+    ports:
+     - 39092:39092
+    volumes:
+      - type: "volume"
+        source: "kafka3"
+        target: "/var/lib/kafka/data"
+        volume:
+          nocopy: true
+    depends_on:
+      - zookeeper1
+      - zookeeper2
+      - zookeeper3
+    environment:
+      KAFKA_BROKER_ID: 3
+      KAFKA_ZOOKEEPER_CONNECT: 192.168.20.4:22181,192.168.20.5:32181,192.168.20.6:42181
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://192.168.20.6:39092
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: "false"
+      KAFKA_DELETE_TOPIC_ENABLE: "true"
+    deploy:
+      placement:
+        constraints:
+          - node.labels.master.replica == 3
+    networks:
+      - stage
+```
 ### kafka cluster docker compose
 ```
 services:
