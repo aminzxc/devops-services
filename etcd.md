@@ -148,3 +148,17 @@ configs:
     file: ./apisix_conf/config.yaml
 
 ```
+### backup etcd
+```
+etcdctl snapshot save /opt/etcd-snapshot.db
+```
+### status backup
+```
+etcdctl snapshot status /opt/etcd-snapshot.db -w table
+```
+### restore backup
+```
+etcdctl snapshot restore /opt/etcd-snapshot.db \
+  --data-dir=/var/lib/etcd-from-backup
+
+```
