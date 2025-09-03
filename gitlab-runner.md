@@ -26,9 +26,9 @@ shutdown_timeout = 0
   clone_url = "http://45.149.71.173"
   [runners.environment]
     GIT_DEPTH = "0"
-    GIT_CURL_VERBOSE = "1"
-    GIT_TRACE = "1"
-    GIT_TRACE_PACKET = "1"
+ #   GIT_CURL_VERBOSE = "1"
+ #   GIT_TRACE = "1"
+ #   GIT_TRACE_PACKET = "1"
   [runners.cache]
     MaxUploadedArchiveSize = 0
     [runners.cache.s3]
