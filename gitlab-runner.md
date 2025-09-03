@@ -6,7 +6,7 @@ sudo gitlab-runner register -n --url https://your_gitlab.com --registration-toke
 ```
 ### Config Runner
 ```
-concurrent = 1
+concurrent = 2
 check_interval = 0
 connection_max_age = "15m0s"
 shutdown_timeout = 0
@@ -16,6 +16,7 @@ shutdown_timeout = 0
 
 [[runners]]
   name = "harbor"
+  helper_image = "registry.gitlab.com/gitlab-org/gitlab-runner/gitlab-runner-helper:x86_64-v17.11.0"
   url = "https://git.metakhodro.ir"
   id = 3
   token = "t1_zdNEHZsdfwb4niRANH2uxk-"
@@ -23,6 +24,11 @@ shutdown_timeout = 0
   token_expires_at = 0001-01-01T00:00:00Z
   executor = "docker"
   clone_url = "http://45.149.71.173"
+  [runners.environment]
+    GIT_DEPTH = "0"
+    GIT_CURL_VERBOSE = "1"
+    GIT_TRACE = "1"
+    GIT_TRACE_PACKET = "1"
   [runners.cache]
     MaxUploadedArchiveSize = 0
     [runners.cache.s3]
@@ -31,6 +37,7 @@ shutdown_timeout = 0
   [runners.docker]
     tls_verify = false
     image = "repo.otomob.ir/stable-image/docker:stable"
+    pull_policy = "if-not-present"
     privileged = false
     disable_entrypoint_overwrite = false
     oom_kill_disable = false
