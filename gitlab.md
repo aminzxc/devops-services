@@ -56,3 +56,49 @@ apt-cache madison gitlab-ce
 apt install gitlab-ce=17.11.1-ce.0
 gitlab-ctl reconfigure
 ```
+### sample pipline
+```
+stages:
+  - build
+  - deploy
+
+variables:
+  F2D_IMAGE_TAG: $CI_COMMIT_SHORT_SHA
+  SERVICE_NAME: f2d
+  DEVELOPERSIDE: backend
+  STACK_NAME: stage
+  DEPLOY_SERVER: oto@185.170.8.18
+  DEPLOY_PATH: /home/oto/stack-stage
+  GIT_DEPTH: "0"
+
+F2D-DOCKER-IMAGE:
+  stage: build
+  before_script:
+    - "echo Logging into $HUB_URL"
+    - "docker login --username $HUB_USER --password $HUB_PASSWORD $HUB_URL"
+  script:
+    - "echo Building ${SERVICE_NAME} image"
+    - "docker build -f build/stage/Dockerfile -t $HUB_URL/${DEVELOPERSIDE}/${SERVICE_NAME}:${F2D_IMAGE_TAG} ."
+    - "docker push $HUB_URL/${DEVELOPERSIDE}/${SERVICE_NAME}:${F2D_IMAGE_TAG}"
+  only:
+    - develop
+
+DEPLOY-F2D-IMAGE:
+  stage: deploy
+  before_script:
+    - eval $(ssh-agent -s)
+    - echo "$SSH_PRIVATE_KEY" | tr -d '\r' | ssh-add -
+  script:
+    - echo "Deploying to stage"
+    - |
+      ssh -o StrictHostKeyChecking=no $DEPLOY_SERVER -p 2256 -vvv "
+        cd $DEPLOY_PATH;
+
+        sed -i 's|image: repo.otomob.ir/backend/f2d:.*|image: repo.otomob.ir/backend/f2d:${F2D_IMAGE_TAG}|g' docker-compose.yml;
+        docker login --username ${HUB_USER} --password ${HUB_PASSWORD} ${HUB_URL};
+        docker stack deploy -c docker-compose.yml --with-registry-auth stage
+      "
+  only:
+    - develop
+
+```
