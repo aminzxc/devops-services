@@ -67,7 +67,7 @@ variables:
   SERVICE_NAME: f2d
   DEVELOPERSIDE: backend
   STACK_NAME: stage
-  DEPLOY_SERVER: oto@185.170.8.18
+  DEPLOY_SERVER: oto@185.172.8.10
   DEPLOY_PATH: /home/oto/stack-stage
   GIT_DEPTH: "0"
 
