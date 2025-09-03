@@ -22,7 +22,7 @@ shutdown_timeout = 0
   token_obtained_at = 2025-04-20T13:10:41Z
   token_expires_at = 0001-01-01T00:00:00Z
   executor = "docker"
-  clone_url = "https://git.metakhodro.ir"
+  clone_url = "http://45.149.71.173"
   [runners.cache]
     MaxUploadedArchiveSize = 0
     [runners.cache.s3]
@@ -65,4 +65,9 @@ shutdown_timeout = 0
     network_mtu = 0
     dns = ["8.8.8.8", "1.1.1.1"]
 
+```
+### test conection repo with gitlab-runner on server runner
+```
+git ls-remote http://45.149.71.175/backend/msfront2db.git
+curl -I http://45.149.71.175/users/sign_in
 ```
