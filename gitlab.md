@@ -60,45 +60,81 @@ gitlab-ctl reconfigure
 ```
 stages:
   - build
-  - deploy
+  - deploy-stage
+  - deploy-production
 
 variables:
-  F2D_IMAGE_TAG: $CI_COMMIT_SHORT_SHA
-  SERVICE_NAME: f2d
-  DEVELOPERSIDE: backend
-  STACK_NAME: stage
-  DEPLOY_SERVER: oto@185.172.8.10
-  DEPLOY_PATH: /home/oto/stack-stage
+  BACKOFFICE_IMAGE_TAG: $CI_COMMIT_SHORT_SHA
+  DEPLOY_SERVER_STAGE: USER@IP
+  DEPLOY_SERVER_PRODUCTION: USER@IP
+  DEPLOY_PATH_STAGE: /home/oto/stack-stage
+  DEPLOY_PATH_PROD: /home/oto/services
   GIT_DEPTH: "0"
 
-F2D-DOCKER-IMAGE:
+BACKOFFICE-DOCKER-IMAGE:
   stage: build
+  rules:
+    - if: '$CI_COMMIT_BRANCH =~ /^(main|develop)$/'
+    - when: never
   before_script:
-    - "echo Logging into $HUB_URL"
-    - "docker login --username $HUB_USER --password $HUB_PASSWORD $HUB_URL"
+    - echo Logging into $HUB_URL
+    - echo "${HUB_PASSWORD}" | docker login --username "${HUB_USER}" --password-stdin "${HUB_URL}"
   script:
-    - "echo Building ${SERVICE_NAME} image"
-    - "docker build -f build/stage/Dockerfile -t $HUB_URL/${DEVELOPERSIDE}/${SERVICE_NAME}:${F2D_IMAGE_TAG} ."
-    - "docker push $HUB_URL/${DEVELOPERSIDE}/${SERVICE_NAME}:${F2D_IMAGE_TAG}"
-  only:
-    - develop
+    - |
+      if [ "$CI_COMMIT_BRANCH" = "main" ]; then
+        DOCKERFILE=Dockerfile-prod
+        REPO_PATH=production
+        IMAGE_NAME=back-office
+      elif [ "$CI_COMMIT_BRANCH" = "develop" ]; then
+        DOCKERFILE=Dockerfile
+        REPO_PATH=frontend
+        IMAGE_NAME=back-office
+      else
+        echo "Unsupported branch: $CI_COMMIT_BRANCH"
+        exit 1
+      fi
 
-DEPLOY-F2D-IMAGE:
-  stage: deploy
+      FULL_IMAGE_NAME="repo.otomob.ir/${REPO_PATH}/${IMAGE_NAME}:${CI_COMMIT_SHORT_SHA}"
+      echo "Using Dockerfile: $DOCKERFILE"
+      echo "Building and pushing image: $FULL_IMAGE_NAME"
+      docker build -f $DOCKERFILE -t $FULL_IMAGE_NAME .
+      docker push $FULL_IMAGE_NAME
+
+DEPLOY-BACKOFFICE-STAGE:
+  stage: deploy-stage
   before_script:
     - eval $(ssh-agent -s)
     - echo "$SSH_PRIVATE_KEY" | tr -d '\r' | ssh-add -
   script:
-    - echo "Deploying to stage"
-    - |
-      ssh -o StrictHostKeyChecking=no $DEPLOY_SERVER -p 2256 -vvv "
-        cd $DEPLOY_PATH;
-
-        sed -i 's|image: repo.otomob.ir/backend/f2d:.*|image: repo.otomob.ir/backend/f2d:${F2D_IMAGE_TAG}|g' docker-compose.yml;
-        docker login --username ${HUB_USER} --password ${HUB_PASSWORD} ${HUB_URL};
-        docker stack deploy -c docker-compose.yml --with-registry-auth stage
+    - echo "Deploying to staging"
+    - >
+      ssh -o StrictHostKeyChecking=no $DEPLOY_SERVER_STAGE -p 2256 "
+      cd $DEPLOY_PATH_STAGE &&
+      sed -i 's|image: repo.otomob.ir/frontend/back-office:.*|image: repo.otomob.ir/frontend/back-office:${BACKOFFICE_IMAGE_TAG}|g' docker-compose.yml &&
+      echo "${HUB_PASSWORD}" | docker login --username "${HUB_USER}" --password-stdin "${HUB_URL}" &&
+      docker stack deploy -c docker-compose.yml --with-registry-auth stage
       "
-  only:
-    - develop
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "develop"'
+
+DEPLOY-BACKOFFICE-PROD:
+  stage: deploy-production
+  when: manual         
+  allow_failure: false
+  before_script:
+    - eval $(ssh-agent -s)
+    - echo "$SSH_PRIVATE_KEY_PRO" | tr -d '\r' | ssh-add -
+  script:
+    - echo "Deploying to production"
+    - >
+      ssh -o StrictHostKeyChecking=no $DEPLOY_SERVER_PRODUCTION -p 2682 "
+      cd $DEPLOY_PATH_PROD &&
+      sed -i 's|image: repo.otomob.ir/production/back-office:.*|image: repo.otomob.ir/production/back-office:${BACKOFFICE_IMAGE_TAG}|g' docker-compose.yml &&
+      echo "${HUB_PASSWORD}" | docker login --username "${HUB_USER}" --password-stdin "${HUB_URL}" &&
+      docker compose up -d back-office
+      "
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "main"'
+
 
 ```
