@@ -132,3 +132,13 @@ volumes:
   my-db-mysql:
 
 ```
+### Connecting the Agent Server to Zabbix
+```
+# config zabbix agent
+ServerActive=127.0.0.1,172.24.0.3
+Server=127.0.0.1,172.24.0.3 (ip container zabbix server)
+# test container zabbix server
+zabbix_get -s 172.24.0.1 -k agent.ping
+# config zabbix UI
+ip Agent 172.24.0.1 (gateway docker network)
+```
