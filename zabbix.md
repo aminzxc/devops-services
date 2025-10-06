@@ -205,4 +205,11 @@ backup.sha256[mongodb] → Text → $.sha256
 
 backup.message[mongodb] → Text → $.message
 ```
+### enable Trigger for backup status
+```
+host->Configuration->Trigger->Create Trigger
+Name: Mongo backup failed
+Severity: Disaster
+Expression: last(/oto/backup.status[mongodb])=0
+```
 
