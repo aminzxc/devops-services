@@ -1,3 +1,18 @@
+### zabbix get
+```
+From the Zabbix server, you send a request to the agent to read the value of an item
+Zabbix Server → Zabbix Agent
+test enable Agent
+zabbix_get -s 172.24.0.1 -p 10050 -k agent.ping
+Check the current value of a specific key, such as
+zabbix_get -s 172.24.0.1 -k system.uptime
+```
+### zabbix sender
+```
+The client or script that generates data itself sends that data directly to the Zabbix server, without the agent asking it
+Client → Zabbix Server
+zabbix_sender -z 172.24.0.3 -s "server" -k custom.cpu.temp -o 62
+```
 ### config `zabbix` docker
 ```
 services:
@@ -163,4 +178,31 @@ zabbix_sender -z "$ZBX_SERVER" -p "$ZBX_PORT" \
 
 ```
 ### config on zabbix server UI
+```
+# config zabbix traper
+host->Configuration->item->Create item
+Name: Backup report (mongodb)
+Type: Zabbix trapper
+Key: backup.report[mongodb]
+Type of information: Text
+
+# Extract related items from JSON
+Name: Backup status (mongodb)
+Type: Dependent item
+Key: backup.status[mongodb]
+Master item: Backup report (mongodb)
+Type of information: Numeric (unsigned)
+
+TAB: Preprocessing:
+JSONPath: $.status
+
+# for all
+backup.size[mongodb] → Numeric (unsigned) → JSONPath: $.size Unit B
+
+backup.duration[mongodb] → Numeric (float) → $.duration -> Unit s
+
+backup.sha256[mongodb] → Text → $.sha256
+
+backup.message[mongodb] → Text → $.message
+```
 
