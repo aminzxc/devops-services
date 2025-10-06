@@ -130,7 +130,6 @@ networks:
     external: true
 volumes:
   my-db-mysql:
-
 ```
 ### Connecting the Agent Server to Zabbix
 ```
@@ -142,3 +141,26 @@ zabbix_get -s 172.24.0.1 -k agent.ping
 # config zabbix UI
 ip Agent 172.24.0.1 (gateway docker network)
 ```
+### docker monitoring
+```
+# install Agent 2
+# Add config zabbix Agent
+ Plugins.Docker.Endpoint = unix:///var/run/docker.sock
+# Add template for host
+Docker by Zabbix agent 2
+```
+### Sending values ​​from the server to the Zabbix server 
+```
+# script test
+ZBX_SERVER="IP"
+ZBX_PORT=10051
+ZBX_HOST="HOST NAME"
+
+payload='{"job":"mongodb","status":1,"size":123,"duration":2,"sha256":"abc","message":"test ok","timestamp":"'"$(date -Is)"'"}'
+
+zabbix_sender -z "$ZBX_SERVER" -p "$ZBX_PORT" \
+  -s "$ZBX_HOST" -k "backup.report[mongodb]" -o "$payload" -vv
+
+```
+### config on zabbix server UI
+
