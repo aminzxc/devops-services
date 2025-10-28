@@ -148,9 +148,19 @@ configs:
     file: ./apisix_conf/config.yaml
 
 ```
+### download  & install`ETCDCTL`
+```
+https://github.com/etcd-io/etcd/releases/download/v3.5.15/etcd-v3.5.15-linux-amd64.tar.gz
+tar -xzvf etcd-v3.5.15-linux-amd64.tar.gz
+install etcdctl /usr/local/bin/
+```
 ### backup etcd
 ```
 etcdctl snapshot save /opt/etcd-snapshot.db
+```
+### backuo etcd with tls
+```
+etcdctl snapshot save backup-etcd.db --key=/etc/kubernetes/pki/etcd/server.key --cert=/etc/kubernetes/pki/etcd/server.crt --cacert=/etc/kubernetes/pki/etcd/ca.crt
 ```
 ### status backup
 ```
