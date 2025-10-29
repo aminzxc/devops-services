@@ -167,10 +167,11 @@ etcdctl snapshot save backup-etcd.db --key=/etc/kubernetes/pki/etcd/server.key -
 etcdctl snapshot status /opt/etcd-snapshot.db -w table
 ```
 ### restore backup
+```
 etcdctl snapshot restore snapshot20240718.db \
   --data-dir /var/lib/etcd-from-backup \ # creates the new path himself
   --initial-cluster master1=https://192.168.1.5:2380 \
   --initial-advertise-peer-urls https://192.168.1.5:2380 \
   --name master1
-
+```
 ```
