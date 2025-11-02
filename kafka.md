@@ -1,3 +1,208 @@
+### Transport
+```
+Kafka on each "Listener" can be in one of these states:
+PLAINTEXT: Without encryption and without authentication.
+SSL: Only TLS (encryption). It can be with or without mTLS (client certificate verification).
+SASL_PLAINTEXT: SASL authentication without TLS (not recommended on the internet).
+SASL_SSL: SASL authentication over TLS (recommended state for production).
+```
+### Authentication Mechanisms (SASL Mechanisms)
+```
+SASL/PLAIN (Simple)
+Where is it stored? On each broker, in the JAAS of the same Listener.
+How? With keys like user_amin="YourPass123".
+Advantage/Disadvantage: Quick and simple setup; but user management is repetitive across all brokers and harder to maintain, and it's not secure without TLS.
+SASL/SCRAM (SHA-256 or SHA-512)
+Where is it stored? In the cluster metadata (Kafka itself). No need to define it on each broker individually.
+Advantage: Centralized management, stable, more secure than PLAIN (hashed password).
+```
+### Permissions and Access Control (Authorization / ACLs)
+```
+Relationship between SASL and ACL
+When you define a user on the broker (for example, with SASL/PLAIN or SCRAM), it only performs authentication.
+That is, Kafka understands that "this user is real".
+But Kafka still doesn't know what it can do.
+Here, ACL (Access Control List) comes into play.
+
+ACLs specify:
+Which user (User)
+On which resource (Resource)
+=> TOPIC, GROUP, CLUSTER, TRANSACTIONAL_ID, DELEGATION_TOKEN …
+What operation (Operation)
+=> READ, WRITE, CREATE, DELETE, ALTER, DESCRIBE, ALTER_CONFIGS, DESCRIBE_CONFIGS, CLUSTER_ACTION, IDEMPOTENT_WRITE, …
+Whether allowed or not
+=> --allow OR --deny
+ACLs are not applied to super users
+```
+### Creating a configuration file for user-side connection
+```
+vim /tmp/kafka-sasl.properties
+security.protocol=SASL_PLAINTEXT
+sasl.mechanism=PLAIN
+sasl.jaas.config=org.apache.kafka.common.security.plain.PlainLoginModule required \
+  username="oto" password="rWF696N)bMJM";
+
+#sasl.jaas.config=org.apache.kafka.common.security.plain.PlainLoginModule required \
+#  username="amin" password="YourPass123";
+```
+### User-side topic creation test with authentication
+```
+docker run --rm --network host -v /tmp/kafka-sasl.properties:/cfg.properties \
+                                                  confluentinc/cp-kafka:7.5.0 \
+                                                  kafka-topics --bootstrap-server IP:9092 \
+                                                  --command-config /cfg.properties \
+                                                  --create --topic amin.auth --partitions 1 --replication-factor 3
+
+```
+### docker compose SASL_PLAINTEXT
+```
+services:
+  kafka1:
+    image: confluentinc/cp-kafka:7.5.0
+    hostname: kafka1
+    container_name: kafka1
+    ports:
+      - "9092:9092"
+      - "9101:9101"
+    environment:
+      KAFKA_NODE_ID: 1
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: "CONTROLLER:PLAINTEXT,INTERNAL:PLAINTEXT,CLIENT:SASL_PLAINTEXT"
+      KAFKA_LISTENERS: "INTERNAL://kafka1:29092,CONTROLLER://kafka1:9093,CLIENT://0.0.0.0:9092"
+      KAFKA_ADVERTISED_LISTENERS: "INTERNAL://kafka1:29092,CLIENT://IP:9092"
+      KAFKA_INTER_BROKER_LISTENER_NAME: "INTERNAL"
+      KAFKA_CONTROLLER_LISTENER_NAMES: "CONTROLLER"
+      KAFKA_LOG_DIRS: "/var/lib/kafka/data"
+      # KRaft
+      KAFKA_CONTROLLER_QUORUM_VOTERS: "1@kafka1:9093,2@kafka2:9193,3@kafka3:9293"
+      KAFKA_PROCESS_ROLES: "broker,controller"
+      CLUSTER_ID: "MkU3OEVBNTcwNTJENDM2Qg"
+      # config
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 3
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 2
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 3
+      KAFKA_NUM_PARTITIONS: 3
+      KAFKA_DEFAULT_REPLICATION_FACTOR: 3
+      KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
+      # JMX
+      KAFKA_JMX_PORT: 9101
+      KAFKA_JMX_HOSTNAME: localhost
+      # SASL/PLAIN
+      KAFKA_SASL_ENABLED_MECHANISMS: "PLAIN"
+      KAFKA_LISTENER_NAME_CLIENT_SASL_ENABLED_MECHANISMS: "PLAIN"
+      KAFKA_LISTENER_NAME_CLIENT_PLAIN_SASL_JAAS_CONFIG: >
+        org.apache.kafka.common.security.plain.PlainLoginModule required
+        user_oto="rWF696N)bMJM";
+      KAFKA_SUPER_USERS: "User:admin"
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: "false"
+    volumes:
+      - kafka1-data:/var/lib/kafka/data
+    networks:
+      - kafka-network
+
+  kafka2:
+    image: confluentinc/cp-kafka:7.5.0
+    hostname: kafka2
+    container_name: kafka2
+    ports:
+      - "9093:9093"
+      - "9102:9102"
+    environment:
+      KAFKA_NODE_ID: 2
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: "CONTROLLER:PLAINTEXT,INTERNAL:PLAINTEXT,CLIENT:SASL_PLAINTEXT"
+      KAFKA_LISTENERS: "INTERNAL://kafka2:29093,CONTROLLER://kafka2:9193,CLIENT://0.0.0.0:9093"
+      KAFKA_ADVERTISED_LISTENERS: "INTERNAL://kafka2:29093,CLIENT://IP:9093"
+      KAFKA_INTER_BROKER_LISTENER_NAME: "INTERNAL"
+      KAFKA_CONTROLLER_LISTENER_NAMES: "CONTROLLER"
+      KAFKA_LOG_DIRS: "/var/lib/kafka/data"
+      KAFKA_CONTROLLER_QUORUM_VOTERS: "1@kafka1:9093,2@kafka2:9193,3@kafka3:9293"
+      KAFKA_PROCESS_ROLES: "broker,controller"
+      CLUSTER_ID: "MkU3OEVBNTcwNTJENDM2Qg"
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 3
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 2
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 3
+      KAFKA_NUM_PARTITIONS: 3
+      KAFKA_DEFAULT_REPLICATION_FACTOR: 3
+      KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
+      KAFKA_JMX_PORT: 9102
+      KAFKA_JMX_HOSTNAME: localhost
+      KAFKA_SASL_ENABLED_MECHANISMS: "PLAIN"
+      KAFKA_LISTENER_NAME_CLIENT_SASL_ENABLED_MECHANISMS: "PLAIN"
+      KAFKA_LISTENER_NAME_CLIENT_PLAIN_SASL_JAAS_CONFIG: >
+        org.apache.kafka.common.security.plain.PlainLoginModule required
+        user_oto="rWF696N)bMJM";
+      KAFKA_SUPER_USERS: "User:admin"
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: "false"
+    volumes:
+      - kafka2-data:/var/lib/kafka/data
+    networks:
+      - kafka-network
+
+  kafka3:
+    image: confluentinc/cp-kafka:7.5.0
+    hostname: kafka3
+    container_name: kafka3
+    ports:
+      - "9094:9094"
+      - "9103:9103"
+    environment:
+      KAFKA_NODE_ID: 3
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: "CONTROLLER:PLAINTEXT,INTERNAL:PLAINTEXT,CLIENT:SASL_PLAINTEXT"
+      KAFKA_LISTENERS: "INTERNAL://kafka3:29094,CONTROLLER://kafka3:9293,CLIENT://0.0.0.0:9094"
+      KAFKA_ADVERTISED_LISTENERS: "INTERNAL://kafka3:29094,CLIENT://IP:9094"
+      KAFKA_INTER_BROKER_LISTENER_NAME: "INTERNAL"
+      KAFKA_CONTROLLER_LISTENER_NAMES: "CONTROLLER"
+      KAFKA_LOG_DIRS: "/var/lib/kafka/data"
+      KAFKA_CONTROLLER_QUORUM_VOTERS: "1@kafka1:9093,2@kafka2:9193,3@kafka3:9293"
+      KAFKA_PROCESS_ROLES: "broker,controller"
+      CLUSTER_ID: "MkU3OEVBNTcwNTJENDM2Qg"
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 3
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 2
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 3
+      KAFKA_NUM_PARTITIONS: 3
+      KAFKA_DEFAULT_REPLICATION_FACTOR: 3
+      KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
+      KAFKA_JMX_PORT: 9103
+      KAFKA_JMX_HOSTNAME: localhost
+      KAFKA_SASL_ENABLED_MECHANISMS: "PLAIN"
+      KAFKA_LISTENER_NAME_CLIENT_SASL_ENABLED_MECHANISMS: "PLAIN"
+      KAFKA_LISTENER_NAME_CLIENT_PLAIN_SASL_JAAS_CONFIG: >
+        org.apache.kafka.common.security.plain.PlainLoginModule required
+        user_oto="rWF696N)bMJM";
+      KAFKA_SUPER_USERS: "User:admin"
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: "false"
+    volumes:
+      - kafka3-data:/var/lib/kafka/data
+    networks:
+      - kafka-network
+
+  kafka-ui:
+    image: provectuslabs/kafka-ui:latest
+    container_name: kafka-ui
+    ports:
+      - "8090:8080"
+    environment:
+      KAFKA_CLUSTERS_0_NAME: kraft-cluster
+      KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: kafka1:29092,kafka2:29093,kafka3:29094
+      KAFKA_CLUSTERS_0_METRICS_PORT: 9101
+      DYNAMIC_CONFIG_ENABLED: "true"
+      KAFKA_CLUSTERS_0_PROPERTIES_SECURITY_PROTOCOL: PLAINTEXT
+
+    depends_on:
+      - kafka1
+      - kafka2
+      - kafka3
+    networks:
+      - kafka-network
+
+volumes:
+  kafka1-data:
+  kafka2-data:
+  kafka3-data:
+
+networks:
+  kafka-network:
+    driver: bridge
+```
 ### swarm kafka cluster with zookeeper
 ``` 
  zookeeper:
