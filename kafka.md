@@ -54,6 +54,198 @@ docker run --rm --network host -v /tmp/kafka-sasl.properties:/cfg.properties \
                                                   --create --topic amin.auth --partitions 1 --replication-factor 3
 
 ```
+### SCRAM stands for "Proof of Password Knowledge Without Saying It"
+```
+In this method, the raw password is never sent.
+The server already has this information:
+a username (USER),
+a salt (random salt),
+and a complex hash of the password (not the password itself).
+
+When the client wants to communicate with the server, it receives a salt and hash from the server and generates a hash with its own password and sends it to the server, which is called client proof. 
+Because the server on its side also has this information, in the end both arrive at the same hash, which proves that neither the server is fake nor the user.
+```
+### create user
+```
+docker exec -it kafka1 kafka-configs \
+                        --bootstrap-server kafka1:29092 \
+                        --alter \
+                        --add-config 'SCRAM-SHA-256=[iterations=8192,password=rWF696N)bMJM]' \
+                        --entity-type users \
+                        --entity-name amin
+
+```
+config file user
+```
+vim /tmp/client.properties
+security.protocol=SASL_PLAINTEXT
+sasl.mechanism=SCRAM-SHA-256
+sasl.jaas.config=org.apache.kafka.common.security.scram.ScramLoginModule required username="oto" password="rWF696N)bMJM";
+```
+### create topic
+```
+docker run --rm -v /tmp/client.properties:/etc/kafka/client.properties \
+                        confluentinc/cp-kafka:7.5.0 \
+                        kafka-topics --bootstrap-server 79.127.125.189:9092 \
+                        --command-config /etc/kafka/client.properties \
+                        --create \
+                        --topic remote-hgkotest-topic \
+                        --partitions 3 \
+                        --replication-factor 3
+
+```
+### config file kafka
+```
+KafkaServer {
+    org.apache.kafka.common.security.scram.ScramLoginModule required;
+};
+```
+### docker compose SALS_SCRAM
+```
+services:
+  kafka1:
+    image: confluentinc/cp-kafka:7.5.0
+    hostname: kafka1
+    container_name: kafka1
+    ports:
+      - "9092:9092"
+      - "9101:9101"
+    environment:
+      KAFKA_NODE_ID: 1
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: "CONTROLLER:PLAINTEXT,INTERNAL:PLAINTEXT,CLIENT:SASL_PLAINTEXT"
+      KAFKA_LISTENERS: "INTERNAL://kafka1:29092,CONTROLLER://kafka1:9093,CLIENT://0.0.0.0:9092"
+      KAFKA_ADVERTISED_LISTENERS: "INTERNAL://kafka1:29092,CLIENT://79.127.125.189:9092"
+      KAFKA_INTER_BROKER_LISTENER_NAME: "INTERNAL"
+      KAFKA_CONTROLLER_LISTENER_NAMES: "CONTROLLER"
+      KAFKA_LOG_DIRS: "/var/lib/kafka/data"
+      # KRaft
+      KAFKA_CONTROLLER_QUORUM_VOTERS: "1@kafka1:9093,2@kafka2:9193,3@kafka3:9293"
+      KAFKA_PROCESS_ROLES: "broker,controller"
+      CLUSTER_ID: "MkU3OEVBNTcwNTJENDM2Qg"
+      # config
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 3
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 2
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 3
+      KAFKA_NUM_PARTITIONS: 3
+      KAFKA_DEFAULT_REPLICATION_FACTOR: 3
+      KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
+      # JMX
+      KAFKA_JMX_PORT: 9101
+      KAFKA_JMX_HOSTNAME: localhost
+      # SASL/SCRAM
+      KAFKA_SASL_ENABLED_MECHANISMS: "SCRAM-SHA-256"
+      KAFKA_LISTENER_NAME_CLIENT_SASL_ENABLED_MECHANISMS: "SCRAM-SHA-256"
+      KAFKA_OPTS: "-Djava.security.auth.login.config=/etc/kafka/kafka_server_jaas.conf"
+      KAFKA_SUPER_USERS: "User:oto"
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: "false"
+    volumes:
+      - kafka1-data:/var/lib/kafka/data
+      - ./kafka_server_jaas.conf:/etc/kafka/kafka_server_jaas.conf:ro
+    networks:
+      - kafka-network
+
+  kafka2:
+    image: confluentinc/cp-kafka:7.5.0
+    hostname: kafka2
+    container_name: kafka2
+    ports:
+      - "9093:9093"
+      - "9102:9102"
+    environment:
+      KAFKA_NODE_ID: 2
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: "CONTROLLER:PLAINTEXT,INTERNAL:PLAINTEXT,CLIENT:SASL_PLAINTEXT"
+      KAFKA_LISTENERS: "INTERNAL://kafka2:29093,CONTROLLER://kafka2:9193,CLIENT://0.0.0.0:9093"
+      KAFKA_ADVERTISED_LISTENERS: "INTERNAL://kafka2:29093,CLIENT://79.127.125.189:9093"
+      KAFKA_INTER_BROKER_LISTENER_NAME: "INTERNAL"
+      KAFKA_CONTROLLER_LISTENER_NAMES: "CONTROLLER"
+      KAFKA_LOG_DIRS: "/var/lib/kafka/data"
+      KAFKA_CONTROLLER_QUORUM_VOTERS: "1@kafka1:9093,2@kafka2:9193,3@kafka3:9293"
+      KAFKA_PROCESS_ROLES: "broker,controller"
+      CLUSTER_ID: "MkU3OEVBNTcwNTJENDM2Qg"
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 3
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 2
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 3
+      KAFKA_NUM_PARTITIONS: 3
+      KAFKA_DEFAULT_REPLICATION_FACTOR: 3
+      KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
+      KAFKA_JMX_PORT: 9102
+      KAFKA_JMX_HOSTNAME: localhost
+      KAFKA_SASL_ENABLED_MECHANISMS: "SCRAM-SHA-256"
+      KAFKA_LISTENER_NAME_CLIENT_SASL_ENABLED_MECHANISMS: "SCRAM-SHA-256"
+      KAFKA_OPTS: "-Djava.security.auth.login.config=/etc/kafka/kafka_server_jaas.conf"
+      KAFKA_SUPER_USERS: "User:oto"
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: "false"
+    volumes:
+      - kafka2-data:/var/lib/kafka/data
+      - ./kafka_server_jaas.conf:/etc/kafka/kafka_server_jaas.conf:ro
+    networks:
+      - kafka-network
+
+  kafka3:
+    image: confluentinc/cp-kafka:7.5.0
+    hostname: kafka3
+    container_name: kafka3
+    ports:
+      - "9094:9094"
+      - "9103:9103"
+    environment:
+      KAFKA_NODE_ID: 3
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: "CONTROLLER:PLAINTEXT,INTERNAL:PLAINTEXT,CLIENT:SASL_PLAINTEXT"
+      KAFKA_LISTENERS: "INTERNAL://kafka3:29094,CONTROLLER://kafka3:9293,CLIENT://0.0.0.0:9094"
+      KAFKA_ADVERTISED_LISTENERS: "INTERNAL://kafka3:29094,CLIENT://79.127.125.189:9094"
+      KAFKA_INTER_BROKER_LISTENER_NAME: "INTERNAL"
+      KAFKA_CONTROLLER_LISTENER_NAMES: "CONTROLLER"
+      KAFKA_LOG_DIRS: "/var/lib/kafka/data"
+      KAFKA_CONTROLLER_QUORUM_VOTERS: "1@kafka1:9093,2@kafka2:9193,3@kafka3:9293"
+      KAFKA_PROCESS_ROLES: "broker,controller"
+      CLUSTER_ID: "MkU3OEVBNTcwNTJENDM2Qg"
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 3
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 2
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 3
+      KAFKA_NUM_PARTITIONS: 3
+      KAFKA_DEFAULT_REPLICATION_FACTOR: 3
+      KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
+      KAFKA_JMX_PORT: 9103
+      KAFKA_JMX_HOSTNAME: localhost
+      KAFKA_SASL_ENABLED_MECHANISMS: "SCRAM-SHA-256"
+      KAFKA_LISTENER_NAME_CLIENT_SASL_ENABLED_MECHANISMS: "SCRAM-SHA-256"
+      KAFKA_OPTS: "-Djava.security.auth.login.config=/etc/kafka/kafka_server_jaas.conf"
+      KAFKA_SUPER_USERS: "User:oto"
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: "false"
+    volumes:
+      - kafka3-data:/var/lib/kafka/data
+      - ./kafka_server_jaas.conf:/etc/kafka/kafka_server_jaas.conf:ro
+    networks:
+      - kafka-network
+
+  kafka-ui:
+    image: provectuslabs/kafka-ui:latest
+    container_name: kafka-ui
+    ports:
+      - "8090:8080"
+    environment:
+      KAFKA_CLUSTERS_0_NAME: kraft-cluster
+      KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: kafka1:29092,kafka2:29093,kafka3:29094
+      KAFKA_CLUSTERS_0_METRICS_PORT: 9101
+      DYNAMIC_CONFIG_ENABLED: "true"
+      KAFKA_CLUSTERS_0_PROPERTIES_SECURITY_PROTOCOL: PLAINTEXT
+    depends_on:
+      - kafka1
+      - kafka2
+      - kafka3
+    networks:
+      - kafka-network
+
+volumes:
+  kafka1-data:
+  kafka2-data:
+  kafka3-data:
+
+networks:
+  kafka-network:
+    driver: bridge
+
+```
 ### docker compose SASL_PLAINTEXT
 ```
 services:
