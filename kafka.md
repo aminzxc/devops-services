@@ -1038,6 +1038,10 @@ kafka-metadata-quorum --bootstrap-server kafka1:29092 describe --replication
 ### Broker config
 ```
 Sometimes the configurations passed from Compose to Kafka are not written directly to the container's configuration file when it runs. In this case, we must first check the variables set on the container and, after the configuration variable exists, directly check it on the broker with the apply command.
+In Kafka, the first execution priority is always in seconds, the second in minutes, and the third in seconds.
+The first configuration priority is on the topic itself and if not set, it will be applied to the broker configurations.
+kafka-configs --bootstrap-server kafka2:29093 \
+  --describe --entity-type topics --entity-name <topic-name>
 
 example
 KAFKA_LOG_RETENTION_MS=2592000000
