@@ -76,7 +76,7 @@ services:
       - MYSQL_USER=zabbix
       - MYSQL_PASSWORD=dp145
       - MYSQL_ROOT_PASSWORD=dp145
-      - ZBX_SERVER_HOST=79.127.125.189
+      - ZBX_SERVER_HOST=IP
     depends_on:
       - mysql-server
     restart: always
@@ -106,7 +106,7 @@ services:
       - PHP_TZ=Asia/Tehran
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.web.rule=Host(`zabbix.otomob.ir`)"
+      - "traefik.http.routers.web.rule=Host(`DOMAIN`)"
       - "traefik.http.routers.web.entrypoints=http"
       - "traefik.http.services.web.loadbalancer.server.port=8080"
       - "traefik.docker.network=zabbix"
@@ -211,5 +211,39 @@ host->Configuration->Trigger->Create Trigger
 Name: Mongo backup failed
 Severity: Disaster
 Expression: last(/oto/backup.status[mongodb])=0
+```
+### config docker zabbix agent
+```
+  zabbix-agent2:
+    image: zabbix/zabbix-agent2:7.0.17-ubuntu
+    container_name: "zabbix-agent2"
+      #    user: root
+    group_add:
+      - "118"
+
+    hostname: server
+    networks:
+      - zabbix
+    environment:
+      - ZBX_SERVER_HOST=zabbix-server-mysql
+      - ZBX_SERVER_PORT=10051
+      - ZBX_HOSTNAME=server
+    volumes:
+      - /:/hostfs:ro
+      - /var/run:/var/run
+      - /sys:/sys:ro
+      - /proc:/proc:ro
+      - /dev:/dev:ro
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+        #    privileged: true
+    restart: always
+```
+```
+# find group zabbix
+getent group docker or grep docker /etc/group
+# config zabbix UI
+Host name --> server
+Interfaces --> DNS name zabbix-agent2 --> Connect to DNS
+Templates --> Docker by Zabbix agent 2	& Linux by Zabbix agent
 ```
 
