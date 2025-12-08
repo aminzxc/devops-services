@@ -36,23 +36,26 @@ ACLs are not applied to super users
 ```
 ### Creating a configuration file for user-side connection
 ```
-vim /tmp/kafka-sasl.properties
+vim /tmp/client.properties
 security.protocol=SASL_PLAINTEXT
 sasl.mechanism=PLAIN
 sasl.jaas.config=org.apache.kafka.common.security.plain.PlainLoginModule required \
   username="oto" password="rWF696N)bMJM";
 
-#sasl.jaas.config=org.apache.kafka.common.security.plain.PlainLoginModule required \
-#  username="amin" password="YourPass123";
+security.protocol=SASL_PLAINTEXT
+sasl.mechanism=SCRAM-SHA-256
+sasl.jaas.config=org.apache.kafka.common.security.scram.ScramLoginModule required username="amin" password="rWF696N)bMJM";
 ```
 ### User-side topic creation test with authentication
 ```
-docker run --rm --network host -v /tmp/kafka-sasl.properties:/cfg.properties \
-                                                  confluentinc/cp-kafka:7.5.0 \
-                                                  kafka-topics --bootstrap-server IP:9092 \
-                                                  --command-config /cfg.properties \
-                                                  --create --topic amin.auth --partitions 1 --replication-factor 3
-
+docker run --rm -v /tmp/client.properties:/etc/kafka/client.properties \
+                                           confluentinc/cp-kafka:7.5.0 \
+                                           kafka-topics --bootstrap-server 79.127.125.189:9092 \
+                                           --command-config /etc/kafka/client.properties \
+                                           --create \
+                                           --topic oto \
+                                           --partitions 3 \
+                                           --replication-factor 3
 ```
 ### SCRAM stands for "Proof of Password Knowledge Without Saying It"
 ```
@@ -73,25 +76,6 @@ docker exec -it kafka1 kafka-configs \
                         --add-config 'SCRAM-SHA-256=[iterations=8192,password=rWF696N)bMJM]' \
                         --entity-type users \
                         --entity-name amin
-
-```
-config file user
-```
-vim /tmp/client.properties
-security.protocol=SASL_PLAINTEXT
-sasl.mechanism=SCRAM-SHA-256
-sasl.jaas.config=org.apache.kafka.common.security.scram.ScramLoginModule required username="oto" password="rWF696N)bMJM";
-```
-### create topic
-```
-docker run --rm -v /tmp/client.properties:/etc/kafka/client.properties \
-                        confluentinc/cp-kafka:7.5.0 \
-                        kafka-topics --bootstrap-server 79.127.125.189:9092 \
-                        --command-config /etc/kafka/client.properties \
-                        --create \
-                        --topic remote-hgkotest-topic \
-                        --partitions 3 \
-                        --replication-factor 3
 
 ```
 ### config file kafka
