@@ -55,3 +55,10 @@ volumes:
     name: mattermost_mattermost-plugins
 ```
 ### To enable the call feature, the module must be installed from the market place. In the call configuration, test mode must be turned off. The ICE Servers Configurations value must be empty
+### Configure Chrome browser to use call
+```
+chrome://flags/#unsafely-treat-insecure-origin-as-secure
+http://IP:8065
+Enabled
+relunch
+```
