@@ -62,3 +62,16 @@ http://IP:8065
 Enabled
 relunch
 ```
+### For proper operation, the firewall must be turned off
+### label for traefik
+```
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.mattermost.rule=Host(`mattermost.local`)"
+      - "traefik.http.routers.mattermost.entrypoints=https"
+      - "traefik.http.routers.mattermost.tls=true"
+      - "traefik.http.services.mattermost.loadbalancer.server.port=8065"
+
+```
+م
+مش
