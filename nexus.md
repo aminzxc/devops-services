@@ -34,3 +34,55 @@ networks:
     external: true
 
 ```
+### set mirror for GO
+```
+ENV GOPROXY=http://172.24.11.152:8081/repository/go-proxy-oto/,direct
+ENV GOSUMDB=off
+```
+### set mirror for npm
+```
+ENV NPM_CONFIG_REGISTRY=http://IP:8081/repository/30bime-npm-group/
+```
+### set mirror for node js
+```
+ENV npm_config_disturl=http://IP:8081/repository/30bime-nodejs-proxy/download/release
+```
+### set mirror for java
+```
+vim settings.xml
+
+<settings>
+  <servers>
+    <server>
+      <id>nexus</id>
+      <username>admin</username>
+      <password>2wsx@WSX</password>
+    </server>
+  </servers>
+  <mirrors>
+    <mirror>
+      <id>nexus</id>
+      <name>30bime nexus</name>
+      <url>http://IP:8081/repository/30bime-maven-group/</url>
+      <mirrorOf>*</mirrorOf>
+    </mirror>
+  </mirrors>
+</settings>
+
+```
+### set mirror alpine
+```
+RUN echo "http://172.24.11.152:8081/repository/oto-alpine-proxy/v3.18/main" > /etc/apk/repositories && \
+    echo "http://172.24.11.152:8081/repository/oto-alpine-proxy/v3.18/community" >> /etc/apk/repositories
+```
+### set mirror apt
+```
+deb http://IP:8081/repository/30bime-ubuntu-noble/ noble main restricted universe multiverse
+
+deb http://IP:8081/repository/30bime-ubuntu-noble-updates/ noble-updates main restricted universe multiverse
+
+deb http://IP:8081/repository/30bime-ubuntu-noble-backports/ noble-backports main restricted universe multiverse
+
+deb http://IP:8081/repository/30bime-ubuntu-noble-security/ noble-security main restricted universe multiverse
+
+```
