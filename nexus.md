@@ -77,6 +77,7 @@ RUN echo "http://172.24.11.152:8081/repository/oto-alpine-proxy/v3.18/main" > /e
 ```
 ### set mirror apt
 ```
+vim /etc/apt/sources.list
 deb http://IP:8081/repository/30bime-ubuntu-noble/ noble main restricted universe multiverse
 
 deb http://IP:8081/repository/30bime-ubuntu-noble-updates/ noble-updates main restricted universe multiverse
@@ -85,4 +86,17 @@ deb http://IP:8081/repository/30bime-ubuntu-noble-backports/ noble-backports mai
 
 deb http://IP:8081/repository/30bime-ubuntu-noble-security/ noble-security main restricted universe multiverse
 
+```
+### The `RAW` repository on Nexus is used to store binary files and assets that do not have a specific format
+```
+Helm charts
+.tar.gz, .zip, .exe, .bin files
+ISOs and operating system images
+Backup and archive files
+PDFs, images, videos
+Documentation files
+Shell scripts (.sh)
+Configuration files (.conf, .yaml, .json)
+Ansible playbooks and roles
+Terraform modules
 ```
