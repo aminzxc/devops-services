@@ -86,15 +86,15 @@ Technitium DNS Server
             185.51.200.1
 ```
 
----
+
 <div dir="rtl">
-# ۱. DNS چیست؟
+###  DNS چیست؟
 
 DNS مخفف **Domain Name System** است.
 
 DNS مثل دفترچه تلفن اینترنت و شبکه کار می‌کند. کار اصلی آن تبدیل نام دامنه به IP است.
 </div>
----
+
 مثلا کاربر در مرورگر می‌زند:
 
 <div dir="ltr" align="left">
