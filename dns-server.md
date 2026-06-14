@@ -29,20 +29,18 @@ services:
       DNS_SERVER_STATS_MAX_STAT_FILE_DAYS: "30"
       DNS_SERVER_PREFER_IPV6: "false"
       TZ: Asia/Tehran
-
     volumes:
       - ./config:/etc/dns
       - ./logs:/var/log/technitium/dns
-
     sysctls:
       - net.ipv4.ip_local_port_range=1024 65535
-
     networks:
       - dns-net
 
 networks:
   dns-net:
     external: true
+
 ```
 
 </div>
