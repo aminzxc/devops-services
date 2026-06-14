@@ -92,7 +92,7 @@ Technitium DNS Server
 </div>
 
 ---
-
+<div dir="rtl" align="right">
 # ۱. DNS چیست؟
 
 DNS مخفف **Domain Name System** است.
@@ -100,7 +100,7 @@ DNS مخفف **Domain Name System** است.
 DNS مثل دفترچه تلفن اینترنت و شبکه کار می‌کند. کار اصلی آن تبدیل نام دامنه به IP است.
 
 مثلا کاربر در مرورگر می‌زند:
-
+</div>
 <div dir="ltr" align="left">
 
 ```text
