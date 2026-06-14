@@ -87,16 +87,17 @@ Technitium DNS Server
 ```
 
 
-<span dir="rtl" align="right">
+<div dir="rtl" align="right">
 
+<h3><bdi>DNS</bdi> چیست؟</h3>
 
-### DNS چیست؟
+<p><bdi>DNS</bdi> مخفف <bdi>Domain Name System</bdi> است.</p>
 
-DNS مخفف **Domain Name System** است.
+<p><bdi>DNS</bdi> مثل دفترچه تلفن اینترنت و شبکه کار می‌کند. کار اصلی آن تبدیل نام دامنه به <bdi>IP</bdi> است.</p>
 
-DNS مثل دفترچه تلفن اینترنت و شبکه کار می‌کند. کار اصلی آن تبدیل نام دامنه به IP است.
+<p>مثلاً کاربر در مرورگر می‌زند:</p>
 
-</span>
+</div>
 
 مثلا کاربر در مرورگر می‌زند:
 
