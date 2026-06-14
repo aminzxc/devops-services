@@ -1,3 +1,4 @@
+<div dir="rtl" align="right">
 ### docker compose
 ```
 services:
@@ -1741,3 +1742,4 @@ Forward کردن دامنه‌های خارجی
 تنظیم DNS از طریق DHCP
 راه‌اندازی DNS دوم برای Redundancy
 ```
+</div>
