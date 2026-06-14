@@ -87,7 +87,8 @@ Technitium DNS Server
 ```
 
 
-<div dir="auto">
+<span dir="rtl" align="right">
+
 
 ### DNS چیست؟
 
@@ -95,7 +96,7 @@ DNS مخفف **Domain Name System** است.
 
 DNS مثل دفترچه تلفن اینترنت و شبکه کار می‌کند. کار اصلی آن تبدیل نام دامنه به IP است.
 
-</div>
+</span>
 
 مثلا کاربر در مرورگر می‌زند:
 
