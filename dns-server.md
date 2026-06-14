@@ -87,7 +87,7 @@ Technitium DNS Server
 ```
 
 
-<div dir="rtl">
+<div dir="auto">
 
 ### DNS چیست؟
 
