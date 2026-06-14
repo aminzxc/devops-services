@@ -1,4 +1,4 @@
-<div dir="rtl" align="right">
+
 
 ### docker compose
 
@@ -2431,4 +2431,4 @@ Forward کردن دامنه‌های خارجی
 
 </div>
 
-</div>
+
