@@ -1,7 +1,4 @@
 ### docker compose
-
-<div dir="ltr" align="left">
-
 ```yaml
 services:
   dns:
@@ -39,10 +36,10 @@ networks:
   dns-net:
     external: true
 
-
 ```
+# default user `admin`
 
-</div>
+
 
 # راهنمای مفاهیم و اصطلاحات مهم DNS برای شبکه داخلی شرکت
 
@@ -52,28 +49,27 @@ networks:
 
 مثال:
 
-<div dir="ltr" align="left">
 
 ```text
 stage.30bime.ir  -> 172.24.11.128
 ```
 
-</div>
+
 
 اگر دامنه‌ای داخل DNS داخلی تعریف نشده بود، DNS Server درخواست را به Forwarderهای خارجی ارسال می‌کند:
 
-<div dir="ltr" align="left">
+
 
 ```text
 178.22.122.101
 185.51.200.1
 ```
 
-</div>
+
 
 معماری کلی:
 
-<div dir="ltr" align="left">
+
 
 ```text
 Company Clients
@@ -90,18 +86,17 @@ Technitium DNS Server
             185.51.200.1
 ```
 
-</div>
-
 ---
-<div dir="rtl" align="right">
+<div dir="rtl">
 # ۱. DNS چیست؟
 
 DNS مخفف **Domain Name System** است.
 
 DNS مثل دفترچه تلفن اینترنت و شبکه کار می‌کند. کار اصلی آن تبدیل نام دامنه به IP است.
-
-مثلا کاربر در مرورگر می‌زند:
 </div>
+---
+مثلا کاربر در مرورگر می‌زند:
+
 <div dir="ltr" align="left">
 
 ```text
