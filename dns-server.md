@@ -1,3 +1,7 @@
+### github
+```
+https://github.com/TechnitiumSoftware/DnsServer/tree/master
+```
 ### docker compose
 ```yaml
 services:
