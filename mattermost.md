@@ -63,6 +63,68 @@ Enabled
 relunch
 ```
 ### For proper operation, the firewall must be turned off
+### manage by `https`
+```
+openssl req -x509 -nodes -days 365 -newkey rsa:2048 \
+-keyout mattermost.key \
+-out mattermost.crt \
+-subj "/CN=mattermost.local" \
+-addext "subjectAltName=DNS:mattermost.local"
+
+openssl x509 -in mattermost.crt -noout -subject -issuer -dates -ext subjectAltName
+```
+```
+services:
+  traefik:
+    image: traefik:v2.11.31
+    container_name: traefik
+    restart: always
+    command:
+      - "--log.level=INFO"
+      - "--providers.docker=true"
+      - "--api.dashboard=true"
+      - "--providers.docker.swarmMode=false"
+      - "--providers.docker.endpoint=unix:///var/run/docker.sock"
+      - "--providers.docker.exposedbydefault=false"
+      - "--entrypoints.http.address=:80"
+      - "--entrypoints.https.address=:443"
+      - "--api=true"
+      - "--ping=true"
+      - "--accesslog=true"
+      - "--accesslog.bufferingsize=100"
+      - "--api.insecure=true"
+      - "--entrypoints.traefik.address=:8081"
+      - "--ping.entrypoint=traefik"
+      - "--accesslog.format=json"
+      - "--providers.docker.network=matter-net"
+      - "--providers.file.directory=/etc/traefik/dynamic"
+      - "--providers.file.watch=true"
+    ports:
+      - "80:80"
+      - "443:443"
+      - "8081:8081"
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:8081/ping"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.traefik.rule=Host(`traefik.30bime.ir`)"
+      - "traefik.http.routers.traefik.entrypoints=http"
+      - "traefik.http.routers.traefik.service=api@internal"
+      - "traefik.http.routers.traefik.middlewares=traefik-auth"
+      - "traefik.http.middlewares.traefik-auth.basicauth.users=wimdfgnd:$$2y$$05$$3DCy/GnLngnxO3dJlaSNhO6BQ2h7Iv9ejevasneaXiob2x9nhN8TW"
+    volumes:
+      - "/var/run/docker.sock:/var/run/docker.sock:ro"
+      - "/etc/localtime:/etc/localtime:ro"
+      - "./traefik/certs:/etc/traefik/certs:ro"
+      - "./traefik/dynamic:/etc/traefik/dynamic:ro"
+    networks:
+      - matter-net
+
+```
 ### label for traefik
 ```
     labels:
@@ -73,5 +135,10 @@ relunch
       - "traefik.http.services.mattermost.loadbalancer.server.port=8065"
 
 ```
+### Add *.crt to Google Chrome
+```
+chrome://certificate-manager/localcerts/usercerts
+```
+### A cert must be generated for each domain
 م
 مش
