@@ -52,7 +52,6 @@ docker exec jira-srv java -jar /var/agent/atlassian-agent.jar \
     -s BLPP-ZPYF-UWJG-EAKD
 ```
 ### README
-```
 [![docker pulls](https://img.shields.io/docker/pulls/haxqer/jira.svg)](https://hub.docker.com/r/haxqer/jira/)  [![docker stars](https://img.shields.io/docker/stars/haxqer/jira.svg)](https://hub.docker.com/r/haxqer/jira/) [![image metadata](https://images.microbadger.com/badges/image/haxqer/jira.svg)](https://microbadger.com/images/haxqer/jira "haxqer/jira image metadata")
 
 # jira
@@ -83,45 +82,45 @@ Video Guide:
 
 - start jira & mysql
 
-
+```
 git clone https://github.com/haxqer/jira.git \
     && cd jira \
     && git checkout rm \
     && docker-compose pull \
     && docker-compose up
-
+```
 
 - start jira & mysql daemon
 
-
+```
 docker-compose up -d
-
+```
 
 - default db(mysql8.0) configure:
 
-bash
+```bash
 driver=mysql8.0
 host=mysql-jira
 port=3306
 db=jira
 user=root
 passwd=123456
-
+```
 
 ## How to run with docker
 
 - start jira
 
-
+```
 docker volume create jira_home_data && docker network create jira-network && docker run -p 8080:8080 -v jira_home_data:/var/jira --network jira-network --name jira-srv -e TZ='Asia/Shanghai' haxqer/jira:9.17.5
-
+```
 
 - config your own db:
 
 
 ## How to hack jira
 
-
+```
 docker exec jira-srv java -jar /var/agent/atlassian-agent.jar \
     -d \
     -p jira \
@@ -129,7 +128,7 @@ docker exec jira-srv java -jar /var/agent/atlassian-agent.jar \
     -n Hello@world.com \
     -o your-org \
     -s you-server-id-xxxx
-
+```
 
 ## How to hack jira plugin
 
@@ -138,7 +137,7 @@ docker exec jira-srv java -jar /var/agent/atlassian-agent.jar \
 2. Find `App Key` of BigGantt is : `eu.softwareplant.biggantt`
 3. Execute :
 
-
+```
 docker exec jira-srv java -jar /var/agent/atlassian-agent.jar \
     -d \
     -p eu.softwareplant.biggantt \
@@ -146,7 +145,7 @@ docker exec jira-srv java -jar /var/agent/atlassian-agent.jar \
     -n Hello@world.com \
     -o your-org \
     -s you-server-id-xxxx
-
+```
 
 4. Paste your license
 
@@ -156,7 +155,7 @@ docker exec jira-srv java -jar /var/agent/atlassian-agent.jar \
 Thanks to:
 + [d1m0nstr](https://github.com/d1m0nstr) for [Jira Service Management](https://github.com/haxqer/jira/issues/11)
 
-
+```
 docker exec jira-srv java -jar /var/agent/atlassian-agent.jar \
     -d \
     -p jsm \
@@ -165,3 +164,4 @@ docker exec jira-srv java -jar /var/agent/atlassian-agent.jar \
     -o your-org/ \
     -s you-server-id
 ```
+
