@@ -106,7 +106,7 @@ port=3306
 db=jira
 user=root
 passwd=123456
-```
+
 
 ## How to run with docker
 
@@ -164,7 +164,4 @@ docker exec jira-srv java -jar /var/agent/atlassian-agent.jar \
     -n Hello@world.com \
     -o your-org/ \
     -s you-server-id
-
-
 ```
-
