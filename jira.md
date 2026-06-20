@@ -42,7 +42,7 @@ volumes:
   mysql_data:
 ```
 ### Active lisence
-
+```
 docker exec jira-srv java -jar /var/agent/atlassian-agent.jar \
     -d \
     -p jira \
