@@ -19,12 +19,6 @@ services:
   mysql-server:
     image: mysql:8.0.36
     container_name: "mysql"
-      #    deploy:
-      #      resources:
-      #        limits:
-      #          cpus: '1'
-      #          memory: 900M
-
     networks:
       - zabbix
     command:
@@ -37,9 +31,8 @@ services:
       - MYSQL_DATABASE=zabbix
       - MYSQL_PASSWORD=dp145
       - MYSQL_ROOT_PASSWORD=dp145
-
     volumes:
-      - my-db-mysql:/var/lib/mysql
+      - zabbix-mysql:/var/lib/mysql
       - ./zabbix-mysql/backups:/backups
     restart: always
 
@@ -47,18 +40,13 @@ services:
     image: zabbix/zabbix-server-mysql:7.0.17-ubuntu
     hostname: zabbix-server-mysql
     container_name: "zabbix-server"
-      #    deploy:
-      #      resources:
-      #        limits:
-      #          cpus: '0.50'
-      #          memory: 200M
-
     networks:
       - zabbix
-
     ports:
       - 10051:10051
-        # - 10050:10050
+      - 10050:10050
+    extra_hosts:
+      - "api.telegram.org:149.154.166.110"
     volumes:
       - /etc/localtime:/etc/localtime:ro
       - /etc/timezone:/etc/timezone:ro
@@ -77,6 +65,7 @@ services:
       - MYSQL_PASSWORD=dp145
       - MYSQL_ROOT_PASSWORD=dp145
       - ZBX_SERVER_HOST=IP
+      - ZBX_STARTHTTPPOLLERS=5
     depends_on:
       - mysql-server
     restart: always
@@ -86,11 +75,6 @@ services:
     container_name: "zabbix-nginx"
     networks:
       - zabbix
-        #    deploy:
-        #      resources:
-        #        limits:
-        #          cpus: '0.50'
-        #          memory: 300M
     volumes:
       - /etc/localtime:/etc/localtime:ro
       - /etc/timezone:/etc/timezone:ro
@@ -106,15 +90,16 @@ services:
       - PHP_TZ=Asia/Tehran
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.web.rule=Host(`DOMAIN`)"
-      - "traefik.http.routers.web.entrypoints=http"
-      - "traefik.http.services.web.loadbalancer.server.port=8080"
+      - "traefik.http.routers.zabbix-web-nginx-mysql.rule=Host(`domaine`)"
+      - "traefik.http.routers.zabbix-web-nginx-mysql.entrypoints=http"
+      - "traefik.http.services.zabbix-web-nginx-mysql.loadbalancer.server.port=8080"
       - "traefik.docker.network=zabbix"
-
     depends_on:
       - mysql-server
       - zabbix-server-mysql
     restart: always
+    ports:
+      - 8080:8080
 
   traefik:
     image: traefik:v2.11
@@ -140,11 +125,35 @@ services:
       - "/etc/localtime:/etc/localtime:ro"
     networks:
       - zabbix
+
+  zabbix-agent2:
+    image: zabbix/zabbix-agent2:7.0.17-ubuntu
+    container_name: "zabbix-agent2"
+    group_add:
+      - "988"
+    hostname: server
+    networks:
+      - zabbix
+    environment:
+      - ZBX_SERVER_HOST=zabbix-server-mysql
+      - ZBX_SERVER_PORT=10051
+      - ZBX_HOSTNAME=server
+    volumes:
+      - /:/hostfs:ro
+      - /var/run:/var/run
+      - /sys:/sys:ro
+      - /proc:/proc:ro
+      - /dev:/dev:ro
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    restart: always
+
 networks:
   zabbix:
     external: true
 volumes:
-  my-db-mysql:
+  zabbix-mysql:
+    name: zabbix-mysql
+
 ```
 ### Connecting the Agent Server to Zabbix
 ```
