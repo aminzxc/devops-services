@@ -1,4 +1,4 @@
-### keepalived `master` `backuo`
+### keepalived `master` `backup`
 ### node master
 ```
 global_defs {
