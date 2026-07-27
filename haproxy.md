@@ -51,3 +51,66 @@ listen stats
  stats show-legends
  stats realm Haproxy\ Statistics
 ```
+### config for kubernetes
+```
+global
+    log /dev/log local0
+    log /dev/log local1 notice
+
+    chroot /var/lib/haproxy
+
+    stats socket /run/haproxy/admin.sock mode 660 level admin
+    stats timeout 30s
+
+    user haproxy
+    group haproxy
+    daemon
+
+defaults
+    log global
+    mode tcp
+
+    option tcplog
+    option dontlognull
+
+    timeout connect 5s
+    timeout client  1h
+    timeout server  1h
+    timeout check   5s
+
+frontend kubernetes_api_frontend
+    description Kubernetes API frontend
+    bind *:6443
+    mode tcp
+
+    default_backend kubernetes_api_backend
+
+backend kubernetes_api_backend
+    description Kubernetes control-plane nodes
+    mode tcp
+
+    balance roundrobin
+    option tcp-check
+
+    default-server inter 2s fall 3 rise 2
+
+    server master1 172.24.11.16:6443 check
+    server master2 172.24.11.17:6443 check
+    server master3 172.24.11.15:6443 check
+
+listen stats
+ bind *:1936
+ mode http
+ option forwardfor
+ option httpclose
+ stats enable
+ stats uri /
+ stats refresh 5s
+ stats show-legends
+ stats realm Haproxy\ Statistics
+
+```
+### verify  config
+```
+haproxy -c -f /etc/haproxy/haproxy.cfg
+```
