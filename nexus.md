@@ -2,7 +2,7 @@
 ```
 services:
   nexus:
-    image: docker.arvancloud.ir/sonatype/nexus3
+    image: sonatype/nexus3:3.92.2
     container_name: nexus
     restart: always
     environment:
@@ -10,7 +10,7 @@ services:
     volumes:
       - nexus-data:/nexus-data
     ports:
-      - "8081:8081"
+      - "8092:8081"
     healthcheck:
       test: ["CMD-SHELL", "curl -f http://localhost:8081/service/rest/v1/status || exit 1"]
       interval: 30s
@@ -22,17 +22,19 @@ services:
         soft: 65536
         hard: 65536
     networks:
-      - nexus
-
+      - net
+    labels:
+      - "traefik.enable=true"
+      - "traefik.docker.network=net"
+      - "traefik.http.routers.nexus.rule=Host(`mirror.service.local`)"
+      - "traefik.http.routers.nexus.entrypoints=http"
+      - "traefik.http.services.nexus.loadbalancer.server.port=8081"
 volumes:
   nexus-data:
     driver: local
-
-
 networks:
-  nexus:
+  net:
     external: true
-
 ```
 ### set mirror for GO
 ```
