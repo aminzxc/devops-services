@@ -38,16 +38,25 @@ networks:
 ```
 ### set mirror for GO
 ```
-ENV GOPROXY=http://172.24.11.152:8081/repository/go-proxy-oto/,direct
+ENV GOPROXY=http://IP-NEXUS:8081/repository/go-proxy-/
 ENV GOSUMDB=off
+Remote storage: https://proxy.golang.org
+
+Name: go-sum-proxy
+Remote storage: https://sum.golang.org
+Strict Content Type Validation: OFF
+ENV GOSUMDB="sum.golang.org https://nexus.example.com/repository/go-sum-proxy/"
 ```
 ### set mirror for npm
 ```
-ENV NPM_CONFIG_REGISTRY=http://IP:8081/repository/30bime-npm-group/
+ENV NPM_CONFIG_REGISTRY=http://IP:8081/repository/npm-proxy/
+Remote storage: https://registry.npmjs.org
 ```
 ### set mirror for node js
 ```
-ENV npm_config_disturl=http://IP:8081/repository/30bime-nodejs-proxy/download/release
+raw (proxy)
+ENV npm_config_disturl=http://IP:8081/repository/nodejs-proxy/download/release
+Remote storage: https://nodejs.org/
 ```
 ### set mirror for java
 ```
@@ -64,12 +73,13 @@ vim settings.xml
   <mirrors>
     <mirror>
       <id>nexus</id>
-      <name>30bime nexus</name>
-      <url>http://IP:8081/repository/30bime-maven-group/</url>
+      <name>nexus</name>
+      <url>http://IP:8081/repository/maven-proxy/</url>
       <mirrorOf>*</mirrorOf>
     </mirror>
   </mirrors>
 </settings>
+
 
 ```
 ### set mirror alpine
