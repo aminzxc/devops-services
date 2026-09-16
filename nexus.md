@@ -40,7 +40,11 @@ networks:
 ```
 ENV GOPROXY=http://IP-NEXUS:8081/repository/go-proxy-/
 ENV GOSUMDB=off
+
+go (proxy)
 Remote storage: https://proxy.golang.org
+
+or
 
 Name: go-sum-proxy
 Remote storage: https://sum.golang.org
@@ -50,6 +54,8 @@ ENV GOSUMDB="sum.golang.org https://nexus.example.com/repository/go-sum-proxy/"
 ### set mirror for npm
 ```
 ENV NPM_CONFIG_REGISTRY=http://IP:8081/repository/npm-proxy/
+
+npm (proxy)
 Remote storage: https://registry.npmjs.org
 ```
 ### set mirror for node js
@@ -131,6 +137,24 @@ RUN rm -f /etc/apt/sources.list.d/debian.sources \
        "deb ${NEXUS}/repository/debian-proxy/ bookworm-updates main" \
        "deb ${NEXUS}/repository/debian-security-proxy/ bookworm-security main" \
        > /etc/apt/sources.list
+```
+### ### set mirror php
+```
+RUN composer config -g secure-http false && \
+    composer config -g repos.packagist composer http://IP:8081/repository/php-proxy/
+
+composer (proxy)
+Remote Storage:
+https://repo.packagist.org
+```
+### set mirror python
+```
+ENV PIP_INDEX_URL=http://IP:8081/repository/python-proxy/simple
+ENV PIP_TRUSTED_HOST=IP:8081
+
+pypi (proxy)
+Remote Storage:
+https://pypi.org/
 ```
 ### The `RAW` repository on Nexus is used to store binary files and assets that do not have a specific format
 ```
