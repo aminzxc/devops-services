@@ -2,7 +2,7 @@
 ```
 services:
   nexus:
-    image: sonatype/nexus3:3.92.2
+    image: sonatype/nexus3:3.96.1
     container_name: nexus
     restart: always
     environment:
@@ -80,24 +80,57 @@ vim settings.xml
   </mirrors>
 </settings>
 
+COPY settings.xml .
+RUN mvn -q -DskipTests package -s settings.xml
 
+maven2 (proxy)
+
+Remote storage: https://repo1.maven.org/maven2/
 ```
 ### set mirror alpine
 ```
-RUN echo "http://172.24.11.152:8081/repository/oto-alpine-proxy/v3.18/main" > /etc/apk/repositories && \
-    echo "http://172.24.11.152:8081/repository/oto-alpine-proxy/v3.18/community" >> /etc/apk/repositories
+RUN echo "http://IP:8081/repository/alpine-proxy/v3.18/main" > /etc/apk/repositories && \
+    echo "http://IP:8081/repository/alpine-proxy/v3.18/community" >> /etc/apk/repositories
+
+alpine (proxy)
+
+Remote storage: https://dl-cdn.alpinelinux.org/alpine/
 ```
 ### set mirror apt
 ```
-vim /etc/apt/sources.list
-deb http://IP:8081/repository/30bime-ubuntu-noble/ noble main restricted universe multiverse
+ubuntu-proxy
+Remote Storage:
+https://archive.ubuntu.com/ubuntu/
 
-deb http://IP:8081/repository/30bime-ubuntu-noble-updates/ noble-updates main restricted universe multiverse
+ubuntu-security-proxy
+Remote Storage:
+https://security.ubuntu.com/ubuntu/
 
-deb http://IP:8081/repository/30bime-ubuntu-noble-backports/ noble-backports main restricted universe multiverse
+#########################################################
+debian-proxy
+Remote:
+https://deb.debian.org/debian/
 
-deb http://IP:8081/repository/30bime-ubuntu-noble-security/ noble-security main restricted universe multiverse
+debian-security-proxy
+Remote:
+https://security.debian.org/debian-security/
+########################################################
+ARG NEXUS=http://IP:8081
 
+RUN rm -f /etc/apt/sources.list.d/ubuntu.sources \
+    && printf '%s\n' \
+       "deb ${NEXUS}/repository/ubuntu-proxy/ noble main restricted universe multiverse" \
+       "deb ${NEXUS}/repository/ubuntu-proxy/ noble-updates main restricted universe multiverse" \
+       "deb ${NEXUS}/repository/ubuntu-proxy/ noble-backports main restricted universe multiverse" \
+       "deb ${NEXUS}/repository/ubuntu-security-proxy/ noble-security main restricted universe multiverse" \
+       > /etc/apt/sources.list
+or
+RUN rm -f /etc/apt/sources.list.d/debian.sources \
+    && printf '%s\n' \
+       "deb ${NEXUS}/repository/debian-proxy/ bookworm main" \
+       "deb ${NEXUS}/repository/debian-proxy/ bookworm-updates main" \
+       "deb ${NEXUS}/repository/debian-security-proxy/ bookworm-security main" \
+       > /etc/apt/sources.list
 ```
 ### The `RAW` repository on Nexus is used to store binary files and assets that do not have a specific format
 ```
