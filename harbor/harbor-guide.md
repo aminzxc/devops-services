@@ -305,4 +305,170 @@ docker push &quot;$IMAGE&quot;
 
 <p dir="rtl">تمرین پیشنهادی: پروژهٔ آزمایشی بسازید، یک <bdi dir="ltr">Image</bdi> را با <bdi dir="ltr">Robot Push</bdi> کنید، اسکن را ببینید، با <bdi dir="ltr">Kubernetes Pull</bdi> کنید و در پایان رفتار <bdi dir="ltr">Immutability</bdi> و <bdi dir="ltr">GC Dry Run</bdi> را آزمایش کنید.</p>
 
+
+
+<h2 dir="rtl">۱۰. استفاده از <bdi dir="ltr">Trivy</bdi> پس از نصب <bdi dir="ltr">Harbor</bdi></h2>
+
+<p dir="rtl">این بخش و بخش‌های بعدی، نکات تکمیلی گفت‌وگو از سؤال استفاده از <bdi dir="ltr">Trivy</bdi> تا تنظیمات امنیتی و <bdi dir="ltr">SBOM</bdi> را ثبت می‌کنند. نسخهٔ مشاهده‌شدهٔ <bdi dir="ltr">Trivy</bdi> در گزارش کاربر <bdi dir="ltr">v0.70.0</bdi> بود؛ محل گزینه‌ها ممکن است با نسخهٔ <bdi dir="ltr">Harbor</bdi> فرق کند.</p>
+
+<pre dir="ltr" style="text-align: left;"><code class="language-bash">sudo ./install.sh --with-trivy
+</code></pre>
+
+<p dir="rtl">این دستور <bdi dir="ltr">Trivy</bdi> را به‌صورت سرویس داخلی <bdi dir="ltr">Harbor</bdi> نصب می‌کند. برای اسکن از پنل استفاده کنید؛ نصب و اجرای <bdi dir="ltr">CLI</bdi> جداگانه روی میزبان لازم نیست.</p>
+
+<ul dir="rtl"><li dir="rtl">با حساب <bdi dir="ltr">Admin</bdi> به <bdi dir="ltr">Administration</bdi> → <bdi dir="ltr">Interrogation Services</bdi> بروید؛ حضور و اتصال <bdi dir="ltr">Trivy</bdi> را بررسی کنید. اگر چند اسکنر دارید، با <bdi dir="ltr">Set as Default</bdi> آن را پیش‌فرض کنید.</li><li dir="rtl">در <bdi dir="ltr">Project</bdi> و تب <bdi dir="ltr">Scanner</bdi> بررسی کنید که اسکنر پروژه <bdi dir="ltr">Trivy</bdi> باشد.</li><li dir="rtl">در <bdi dir="ltr">Repositories</bdi>، مخزن و <bdi dir="ltr">Artifact</bdi> را انتخاب و <bdi dir="ltr">Scan</bdi> یا <bdi dir="ltr">Scan Vulnerability</bdi> را بزنید.</li><li dir="rtl">وضعیت از <bdi dir="ltr">Queued</bdi> به <bdi dir="ltr">Scanning</bdi> و سپس <bdi dir="ltr">Complete</bdi> می‌رود. <bdi dir="ltr">Complete</bdi> یعنی اتمام موفق اسکن، نه نبود آسیب‌پذیری.</li><li dir="rtl">روی <bdi dir="ltr">Digest</bdi> آبی <bdi dir="ltr">Artifact</bdi> کلیک کنید تا جدول <bdi dir="ltr">CVE</bdi>، شدت، پکیج، نسخهٔ نصب‌شده و نسخهٔ اصلاح‌شده باز شود.</li><li dir="rtl">برای اسکن خودکار، در <bdi dir="ltr">Configuration</bdi> پروژه گزینهٔ <bdi dir="ltr">Automatically scan images on push</bdi> را فعال و <bdi dir="ltr">Save</bdi> کنید. ایمیج‌های قبلی را دستی اسکن کنید.</li><li dir="rtl">در صورت شکست، <bdi dir="ltr">View Log</bdi> همان اسکن و لاگ سرویس‌ها را بررسی کنید.</li></ul>
+
+<pre dir="ltr" style="text-align: left;"><code class="language-bash">sudo docker compose ps
+sudo docker compose logs --tail=100 trivy-adapter
+sudo docker compose logs --tail=100 jobservice
+</code></pre>
+
+<p dir="rtl">دانلود اولیهٔ دیتابیس ممکن است زمان ببرد. خطاهای شبکه، <bdi dir="ltr">DNS</bdi>، <bdi dir="ltr">Proxy</bdi> یا <bdi dir="ltr">TLS</bdi> می‌توانند اسکن را مختل کنند. پس از شناسایی مشکل امنیتی باید وابستگی یا <bdi dir="ltr">Base Image</bdi> را اصلاح، دوباره <bdi dir="ltr">Build</bdi> و <bdi dir="ltr">Push</bdi> و سپس <bdi dir="ltr">Scan</bdi> کنید؛ <bdi dir="ltr">Trivy</bdi> خودش ایمیج را اصلاح نمی‌کند.</p>
+
+<p dir="rtl">مرجع: <a href="https://goharbor.io/docs/2.14.0/administration/vulnerability-scanning/scan-individual-artifact/">اسکن Artifact در Harbor</a></p>
+
+<h2 dir="rtl">۱۱. رفع خطای دانلود دیتابیس: 403 از <bdi dir="ltr">mirror.gcr.io</bdi></h2>
+
+<p dir="rtl">در لاگ ارسالی، <bdi dir="ltr">Adapter</bdi> وضعیت <bdi dir="ltr">healthy</bdi> داشت اما دانلود دیتابیس از <bdi dir="ltr">mirror.gcr.io</bdi> با 403 شکست خورد. <bdi dir="ltr">healthy</bdi> بودن، آماده‌بودن <bdi dir="ltr">API</bdi> سرویس را نشان می‌دهد و تضمین دانلود دیتابیس نیست. خطای 500 نهایی پیامد شکست اسکن بود؛ هشدار <bdi dir="ltr">deprecated</bdi> بودن --<bdi dir="ltr">vuln-type</bdi> علت اصلی نبود.</p>
+
+<pre dir="ltr" style="text-align: left;"><code class="language-text">failed to download vulnerability DB
+GET https://mirror.gcr.io/v2/: 403 Forbidden
+</code></pre>
+
+<p dir="rtl">علت دقیق 403، مثل محدودیت <bdi dir="ltr">IP</bdi> یا سیاست شبکه، از این لاگ به‌تنهایی معلوم نیست. راه‌حل استفاده‌شده، تغییر منبع دیتابیس به <bdi dir="ltr">GHCR</bdi> بود.</p>
+
+<p dir="rtl">کنار <bdi dir="ltr">docker-compose.yml</bdi>، فایل <bdi dir="ltr">docker-compose.override.yml</bdi> را ایجاد کنید. اگر وجود دارد، تنظیمات را با محتوای فعلی ادغام کنید و آن را بازنویسی نکنید:</p>
+
+<pre dir="ltr" style="text-align: left;"><code class="language-yaml">services:
+  trivy-adapter:
+    environment:
+      SCANNER_TRIVY_DB_REPOSITORY: &quot;ghcr.io/aquasecurity/trivy-db:2&quot;
+      SCANNER_TRIVY_JAVA_DB_REPOSITORY: &quot;ghcr.io/aquasecurity/trivy-java-db:1&quot;
+</code></pre>
+
+<p dir="rtl">متغیر اول دیتابیس آسیب‌پذیری و دومی دیتابیس شناسایی <bdi dir="ltr">Artifact</bdi>های <bdi dir="ltr">Java</bdi> را تنظیم می‌کند. فقط سرویس <bdi dir="ltr">Trivy</bdi> را با تنظیم جدید بازسازی کنید:</p>
+
+<pre dir="ltr" style="text-align: left;"><code class="language-bash">sudo docker compose   -f docker-compose.yml   -f docker-compose.override.yml   up -d --no-deps --force-recreate trivy-adapter
+</code></pre>
+
+<p dir="rtl">صرفاً <bdi dir="ltr">restart</bdi> کردن، متغیرهای محیطی جدید را اعمال نمی‌کند. در مدیریت بعدی <bdi dir="ltr">Compose</bdi> نیز هر دو فایل را لحاظ کنید. برای بررسی مقدارهای اعمال‌شده:</p>
+
+<pre dir="ltr" style="text-align: left;"><code class="language-bash">sudo docker compose exec trivy-adapter   printenv SCANNER_TRIVY_DB_REPOSITORY SCANNER_TRIVY_JAVA_DB_REPOSITORY
+sudo docker compose logs --since=5m -f trivy-adapter
+</code></pre>
+
+<p dir="rtl">از پنل دوباره <bdi dir="ltr">Scan</bdi> بزنید؛ در لاگ باید <bdi dir="ltr">ghcr.io</bdi> به‌عنوان منبع ظاهر شود و دانلود کامل شود. اگر <bdi dir="ltr">GHCR</bdi> هم خطا داد، دسترسی خروجی خود کانتینر و <bdi dir="ltr">Proxy</bdi> را بررسی کنید. <bdi dir="ltr">skip_update: true</bdi> بدون دیتابیس موجود راه‌حل نیست. در محیط آفلاین، دیتابیس باید از مسیر کنترل‌شده وارد یا در رجیستری داخلی میزبانی و منظم به‌روزرسانی شود.</p>
+
+<p dir="rtl">مرجع: <a href="https://github.com/goharbor/harbor-scanner-trivy#configuration">متغیرهای محیطی Adapter</a></p>
+
+<h2 dir="rtl">۱۲. دانلود، کش و به‌روزرسانی دیتابیس</h2>
+
+<p dir="rtl"><bdi dir="ltr">Trivy</bdi> دیتابیس را در هر اسکن از ابتدا دانلود نمی‌کند؛ کش موجود را استفاده و در زمان نیاز به‌روزرسانی می‌کند.</p>
+
+<table dir="rtl"><tr><th dir="rtl" align="right">وضعیت</th><th dir="rtl" align="right">رفتار</th></tr>
+<tr><td dir="rtl" align="right">نبود دیتابیس در اولین اجرا</td><td dir="rtl" align="right">دانلود دیتابیس</td></tr>
+<tr><td dir="rtl" align="right">اسکن بعدی با دیتابیس به‌روز</td><td dir="rtl" align="right">استفاده از کش</td></tr>
+<tr><td dir="rtl" align="right">رسیدن زمان به‌روزرسانی</td><td dir="rtl" align="right">دریافت نسخهٔ جدید هنگام نیاز</td></tr>
+<tr><td dir="rtl" align="right">پاک‌شدن دیتابیس یا <bdi dir="ltr">Volume</bdi></td><td dir="rtl" align="right">دانلود مجدد</td></tr></table>
+
+<p dir="rtl">مسیر پیش‌فرض کش داخل <bdi dir="ltr">Adapter</bdi> برابر <code dir="ltr">/home/scanner/.cache/trivy</code> است. اگر روی <bdi dir="ltr">Volume</bdi> پایدار باشد، پس از بازسازی کانتینر باقی می‌ماند. متادیتای دیتابیس را با این دستور ببینید:</p>
+
+<pre dir="ltr" style="text-align: left;"><code class="language-bash">sudo docker compose exec trivy-adapter \
+  cat /home/scanner/.cache/trivy/db/metadata.json
+</code></pre>
+
+<p dir="rtl">فیلد <bdi dir="ltr">NextUpdate</bdi> زمان برنامه‌ریزی‌شدهٔ به‌روزرسانی بعدی را نشان می‌دهد؛ به معنی وجود یک <bdi dir="ltr">Cron</bdi> مستقل نیست. دسترسی به منبع را حفظ کنید؛ قطع دسترسی هنگام نیاز به <bdi dir="ltr">Update</bdi> ممکن است اسکن را متوقف کند. غیرفعال‌کردن <bdi dir="ltr">Update</bdi> به‌صورت دائمی باعث کهنه‌شدن اطلاعات امنیتی می‌شود.</p>
+
+<p dir="rtl">مرجع: <a href="https://trivy.dev/docs/latest/configuration/db/">مدیریت دیتابیس Trivy</a></p>
+
+<h2 dir="rtl">۱۳. خواندن نتیجهٔ اسکن و اصلاح ایمیج</h2>
+
+<p dir="rtl">در تصویر ارسالی، اسکن تگ <code dir="ltr">b381f5d1</code> طی ۲ دقیقه و ۲۵ ثانیه تمام شد. نتیجهٔ همان اجرا، نه وضعیت فعلی همهٔ ایمیج‌ها، به این صورت بود:</p>
+
+<table dir="rtl"><tr><th dir="rtl" align="right">شدت</th><th dir="rtl" align="right">تعداد</th></tr>
+<tr><td dir="rtl" align="right"><bdi dir="ltr">Critical</bdi></td><td dir="rtl" align="right">۶</td></tr>
+<tr><td dir="rtl" align="right"><bdi dir="ltr">High</bdi></td><td dir="rtl" align="right">۷۵</td></tr>
+<tr><td dir="rtl" align="right"><bdi dir="ltr">Medium</bdi></td><td dir="rtl" align="right">۹۸</td></tr>
+<tr><td dir="rtl" align="right"><bdi dir="ltr">Low</bdi></td><td dir="rtl" align="right">۶۹</td></tr>
+<tr><td dir="rtl" align="right">مجموع</td><td dir="rtl" align="right">۲۴۸</td></tr></table>
+
+<p dir="rtl">هر ۲۴۸ مورد <bdi dir="ltr">Fixable</bdi> گزارش شده بود: طبق دادهٔ اسکنر نسخهٔ اصلاح‌شده وجود دارد، ولی خود ایمیج هنوز اصلاح نشده است. این تعداد الزاماً تعداد <bdi dir="ltr">CVE</bdi> یکتا نیست؛ یک <bdi dir="ltr">CVE</bdi> می‌تواند برای چند پکیج گزارش شود. <bdi dir="ltr">Not Scanned</bdi> یعنی آن <bdi dir="ltr">Artifact</bdi> هنوز اسکن نشده؛ علامت قرمز <bdi dir="ltr">Signed</bdi> مربوط به امضاست و مستقل از موفقیت اسکن است.</p>
+
+<p dir="rtl">در بخش قابل‌مشاهدهٔ جدول جزئیات، پکیج‌ها و نسخه‌های زیر گزارش شدند. این اعداد از تصویر هستند؛ وجود نسخه در مخزن سیستم‌عامل باید جداگانه بررسی شود:</p>
+
+<table dir="rtl"><tr><th dir="rtl" align="right">پکیج</th><th dir="rtl" align="right">نسخهٔ نصب‌شده</th><th dir="rtl" align="right">نسخهٔ اصلاح‌شده طبق گزارش</th></tr>
+<tr><td dir="rtl" align="right"><bdi dir="ltr">mariadb-common</bdi></td><td dir="rtl" align="right">11.4.10-<bdi dir="ltr">r0</bdi></td><td dir="rtl" align="right">11.4.11-<bdi dir="ltr">r0</bdi></td></tr>
+<tr><td dir="rtl" align="right"><bdi dir="ltr">mysql-client</bdi></td><td dir="rtl" align="right">11.4.10-<bdi dir="ltr">r0</bdi></td><td dir="rtl" align="right">11.4.11-<bdi dir="ltr">r0</bdi></td></tr>
+<tr><td dir="rtl" align="right"><bdi dir="ltr">c-ares</bdi></td><td dir="rtl" align="right">1.34.6-<bdi dir="ltr">r0</bdi></td><td dir="rtl" align="right">1.34.8-<bdi dir="ltr">r0</bdi></td></tr>
+<tr><td dir="rtl" align="right"><bdi dir="ltr">curl</bdi></td><td dir="rtl" align="right">8.19.0-<bdi dir="ltr">r0</bdi></td><td dir="rtl" align="right">برای چند مورد 8.22.0-<bdi dir="ltr">r0</bdi>؛ برای برخی 8.20.0-<bdi dir="ltr">r0</bdi></td></tr></table>
+
+<p dir="rtl">وضعیت <bdi dir="ltr">fixed</bdi> یعنی اصلاح منتشر شده، نه اینکه نسخهٔ نصب‌شده اصلاح شده باشد. اول <bdi dir="ltr">Critical</bdi> و <bdi dir="ltr">High</bdi> را بررسی کنید. شکل نسخه‌ها احتمال <bdi dir="ltr">Alpine</bdi> را مطرح می‌کند، ولی تأیید آن به <bdi dir="ltr">FROM</bdi> در <bdi dir="ltr">Dockerfile</bdi> یا اطلاعات سیستم‌عامل نیاز دارد.</p>
+
+<ul dir="rtl"><li dir="rtl"><bdi dir="ltr">Base Image</bdi> و وابستگی‌ها را به نسخهٔ اصلاح‌شده و سازگار ارتقا دهید.</li><li dir="rtl">اگر ایمیج <bdi dir="ltr">Alpine</bdi> است، به‌روزرسانی پکیج‌ها را در مرحلهٔ مناسب <bdi dir="ltr">Dockerfile</bdi> و با کاربر <bdi dir="ltr">root</bdi> انجام دهید.</li><li dir="rtl">اگر پکیج‌هایی مثل <bdi dir="ltr">mysql-client</bdi> فقط برای توسعه لازم‌اند، امکان حذف آن‌ها از ایمیج نهایی را بررسی کنید. وجود <bdi dir="ltr">mysql-client</bdi> به‌تنهایی به معنی نصب سرور <bdi dir="ltr">MySQL</bdi> نیست.</li><li dir="rtl">با تگ جدید <bdi dir="ltr">Build</bdi> و <bdi dir="ltr">Push</bdi> کنید، تست سازگاری برنامه را اجرا کنید و دوباره <bdi dir="ltr">Scan</bdi> بگیرید.</li></ul>
+
+<pre dir="ltr" style="text-align: left;"><code class="language-dockerfile">RUN apk update &amp;&amp; apk upgrade --no-cache
+</code></pre>
+
+<p dir="rtl">این دستور فقط نسخه‌های موجود در مخازن تنظیم‌شدهٔ ایمیج را نصب می‌کند؛ اگر نسخهٔ اصلاح‌شده در همان شاخه نیست، کافی نخواهد بود. مخازن شاخه‌های مختلف <bdi dir="ltr">Alpine</bdi> را مخلوط نکنید. برای نسخهٔ دقیق اصلاح <bdi dir="ltr">Dockerfile</bdi>، خطوط <bdi dir="ltr">FROM</bdi> و نصب پکیج‌ها لازم است.</p>
+
+<p dir="rtl">مرجع: <a href="https://docs.alpinelinux.org/user-handbook/0.1a/Working/apk.html">مدیریت پکیج Alpine</a></p>
+
+<h2 dir="rtl">۱۴. معنی <bdi dir="ltr">CVE</bdi> و <bdi dir="ltr">CVSS</bdi></h2>
+
+<p dir="rtl"><bdi dir="ltr">CVE</bdi> مخفف <bdi dir="ltr">Common Vulnerabilities and Exposures</bdi> و شناسهٔ استاندارد یک آسیب‌پذیری شناخته‌شده است. در نمونهٔ <code dir="ltr">CVE-2026-44170</code>، عدد ۲۰۲۶ سال اختصاص شناسه یا انتشار عمومی آن است، نه لزوماً کشف؛ بخش آخر شمارهٔ شناسایی است و شدت را نشان نمی‌دهد.</p>
+
+<p dir="rtl"><bdi dir="ltr">CVSS</bdi> مخفف <bdi dir="ltr">Common Vulnerability Scoring System</bdi> است و شدت فنی آسیب‌پذیری را امتیازدهی می‌کند. عبارت <bdi dir="ltr">cv33</bdi> در سؤال، با توجه به تصویر به‌عنوان <bdi dir="ltr">CVSS</bdi> تفسیر شد.</p>
+
+<table dir="rtl"><tr><th dir="rtl" align="right">امتیاز <bdi dir="ltr">CVSS</bdi></th><th dir="rtl" align="right">شدت در دسته‌بندی نسخه‌های ۳ و ۴</th></tr>
+<tr><td dir="rtl" align="right">۰</td><td dir="rtl" align="right"><bdi dir="ltr">None</bdi></td></tr>
+<tr><td dir="rtl" align="right">۰٫۱ تا ۳٫۹</td><td dir="rtl" align="right"><bdi dir="ltr">Low</bdi></td></tr>
+<tr><td dir="rtl" align="right">۴ تا ۶٫۹</td><td dir="rtl" align="right"><bdi dir="ltr">Medium</bdi></td></tr>
+<tr><td dir="rtl" align="right">۷ تا ۸٫۹</td><td dir="rtl" align="right"><bdi dir="ltr">High</bdi></td></tr>
+<tr><td dir="rtl" align="right">۹ تا ۱۰</td><td dir="rtl" align="right"><bdi dir="ltr">Critical</bdi></td></tr></table>
+
+<p dir="rtl"><bdi dir="ltr">CVE</bdi> مشخص می‌کند کدام آسیب‌پذیری؛ <bdi dir="ltr">CVSS</bdi> شدت فنی آن را بیان می‌کند. نمرهٔ بالا به‌تنهایی به معنی هک‌شدن سیستم نیست. قابلیت بهره‌برداری در محیط واقعی، دسترسی شبکه و نحوهٔ استفاده از پکیج نیز مهم‌اند.</p>
+
+<h2 dir="rtl">۱۵. تنظیم صفحهٔ امنیت پروژه</h2>
+
+<p dir="rtl">پیشنهاد برای وضعیت مشاهده‌شده: در مرحلهٔ آماده‌سازی، اسکن خودکار و تولید <bdi dir="ltr">SBOM</bdi> را روشن کنید؛ ابتدا نسخه‌های قابل‌استقرار را اصلاح و آزمایش کنید، سپس محدودیت <bdi dir="ltr">Pull</bdi> را فعال کنید. این مرحلهٔ آماده‌سازی به معنی امن‌بودن ایمیج‌های آسیب‌پذیر برای <bdi dir="ltr">Production</bdi> نیست.</p>
+
+<table dir="rtl"><tr><th dir="rtl" align="right">گزینه</th><th dir="rtl" align="right">تنظیم پیشنهادی</th><th dir="rtl" align="right">اثر</th></tr>
+<tr><td dir="rtl" align="right"><bdi dir="ltr">Cosign / Notation</bdi></td><td dir="rtl" align="right">تا راه‌اندازی امضا خاموش</td><td dir="rtl" align="right">الزام امضا برای <bdi dir="ltr">Pull</bdi>؛ خود گزینه ایمیج را امضا نمی‌کند</td></tr>
+<tr><td dir="rtl" align="right"><bdi dir="ltr">Automatically scan images on push</bdi></td><td dir="rtl" align="right">روشن</td><td dir="rtl" align="right">اسکن <bdi dir="ltr">Artifact</bdi>های <bdi dir="ltr">Push</bdi>شدهٔ جدید</td></tr>
+<tr><td dir="rtl" align="right"><bdi dir="ltr">Automatically generate SBOM on push</bdi></td><td dir="rtl" align="right">روشن</td><td dir="rtl" align="right">تولید فهرست اجزای ایمیج</td></tr>
+<tr><td dir="rtl" align="right"><bdi dir="ltr">Prevent vulnerable images from running</bdi></td><td dir="rtl" align="right">پس از اصلاح و تست، روشن با <bdi dir="ltr">High</bdi></td><td dir="rtl" align="right">مسدودسازی <bdi dir="ltr">Pull</bdi> براساس شدت</td></tr>
+<tr><td dir="rtl" align="right"><bdi dir="ltr">CVE allowlist</bdi></td><td dir="rtl" align="right">فعلاً <bdi dir="ltr">System allowlist</bdi> خالی</td><td dir="rtl" align="right">بدون استثنای جدید</td></tr></table>
+
+<table dir="rtl"><tr><th dir="rtl" align="right">آستانه</th><th dir="rtl" align="right">شدت‌های مسدودشده</th></tr>
+<tr><td dir="rtl" align="right"><bdi dir="ltr">Critical</bdi></td><td dir="rtl" align="right"><bdi dir="ltr">Critical</bdi></td></tr>
+<tr><td dir="rtl" align="right"><bdi dir="ltr">High</bdi></td><td dir="rtl" align="right"><bdi dir="ltr">High</bdi> و <bdi dir="ltr">Critical</bdi></td></tr>
+<tr><td dir="rtl" align="right"><bdi dir="ltr">Medium</bdi></td><td dir="rtl" align="right"><bdi dir="ltr">Medium</bdi> و <bdi dir="ltr">High</bdi> و <bdi dir="ltr">Critical</bdi></td></tr>
+<tr><td dir="rtl" align="right"><bdi dir="ltr">Low</bdi></td><td dir="rtl" align="right"><bdi dir="ltr">Low</bdi> و <bdi dir="ltr">Medium</bdi> و <bdi dir="ltr">High</bdi> و <bdi dir="ltr">Critical</bdi></td></tr></table>
+
+<p dir="rtl"><bdi dir="ltr">Low</bdi> سخت‌گیرانه‌تر از <bdi dir="ltr">High</bdi> است. ایمیج مشاهده‌شده با ۶ مورد <bdi dir="ltr">Critical</bdi> حتی در آستانهٔ <bdi dir="ltr">Critical</bdi> هم مسدود می‌شود، مگر همهٔ موارد مانع مشمول استثنای معتبر باشند. این سیاست <bdi dir="ltr">Pull</bdi> را کنترل می‌کند؛ کانتینر در حال اجرا را متوقف نمی‌کند. <bdi dir="ltr">Deploy</bdi> یا <bdi dir="ltr">Scale</bdi> نیازمند <bdi dir="ltr">Pull</bdi> ممکن است شکست بخورد. کنترل <bdi dir="ltr">Admission</bdi> برای ایمیج‌های <bdi dir="ltr">Cache</bdi>شده و استقرار در <bdi dir="ltr">Kubernetes</bdi> نیز اهمیت دارد.</p>
+
+<p dir="rtl">بعد از راه‌اندازی امضا در <bdi dir="ltr">CI</bdi>، گزینهٔ ابزار منتخب را فعال کنید. انتخاب هر دو <bdi dir="ltr">Cosign</bdi> و <bdi dir="ltr">Notation</bdi> به معنی الزام هر دو سیاست است. امضا مستقل از اسکن آسیب‌پذیری است.</p>
+
+<p dir="rtl">مرجع: <a href="https://goharbor.io/docs/2.14.0/working-with-projects/project-configuration/implementing-content-trust/">سیاست امضا</a></p>
+
+<p dir="rtl"><bdi dir="ltr">System allowlist</bdi> استثناهای سراسری را به پروژه اعمال می‌کند. <bdi dir="ltr">Project allowlist</bdi> برای فهرست مستقل پروژه است. فقط پس از بررسی و پذیرش ریسک، <bdi dir="ltr">CVE</bdi> مشخص را اضافه کنید؛ <bdi dir="ltr">Never expires</bdi> را بردارید و برای <bdi dir="ltr">Allowlist</bdi> تاریخ پایان بگذارید. این گزینه اصلاح امنیتی انجام نمی‌دهد و برای عبور بی‌دلیل از خطاها نیست.</p>
+
+<p dir="rtl"><bdi dir="ltr">Copy From System</bdi> یک کپی از ورودی‌های فعلی است، نه همگام‌سازی دائمی. بعد از انتخاب <bdi dir="ltr">Project allowlist</bdi>، تغییرات بعدی فهرست سراسری خودکار منتقل نمی‌شوند. در پایان <bdi dir="ltr">Save</bdi> کنید و رفتار <bdi dir="ltr">Pull</bdi> را در محیط آزمایشی بررسی کنید.</p>
+
+<p dir="rtl">مرجع: <a href="https://goharbor.io/docs/2.14.0/working-with-projects/project-configuration/configure-project-allowlist/">Allowlist پروژه</a></p>
+
+<p dir="rtl">مرجع: <a href="https://goharbor.io/docs/2.14.0/working-with-projects/project-configuration/">اسکن خودکار و آستانهٔ شدت</a></p>
+
+<h2 dir="rtl">۱۶. <bdi dir="ltr">SBOM</bdi> چیست و چه کاربردی دارد؟</h2>
+
+<p dir="rtl"><bdi dir="ltr">SBOM</bdi> مخفف <bdi dir="ltr">Software Bill of Materials</bdi>، یعنی فهرست اجزای تشکیل‌دهندهٔ نرم‌افزار است: چه پکیج‌ها و کتابخانه‌هایی با چه نسخه‌ای در ایمیج وجود دارند. بسته به ابزار و قالب، اطلاعات مجوز و وابستگی‌ها نیز می‌تواند ثبت شود.</p>
+
+<table dir="rtl"><tr><th dir="rtl" align="right">خروجی</th><th dir="rtl" align="right">پاسخ به چه سؤال؟</th></tr>
+<tr><td dir="rtl" align="right"><bdi dir="ltr">SBOM</bdi></td><td dir="rtl" align="right">چه اجزایی داخل ایمیج وجود دارد؟</td></tr>
+<tr><td dir="rtl" align="right">گزارش آسیب‌پذیری</td><td dir="rtl" align="right">کدام اجزا مشکل امنیتی شناخته‌شده دارند؟</td></tr></table>
+
+<p dir="rtl">وقتی <bdi dir="ltr">CVE</bdi> جدیدی برای یک پکیج منتشر می‌شود، می‌توانید <bdi dir="ltr">SBOM</bdi> ایمیج‌ها را با اطلاعات جدید تطبیق دهید و موارد نیازمند بررسی را پیدا کنید. <bdi dir="ltr">SBOM</bdi> برای موجودی وابستگی‌ها، بررسی مجوزها و ممیزی هم مفید است؛ به‌تنهایی گواه امن‌بودن نرم‌افزار نیست.</p>
+
+<p dir="rtl"><bdi dir="ltr">Automatically generate SBOM on push</bdi> این فهرست را پس از <bdi dir="ltr">Push</bdi> تولید می‌کند؛ چیزی را اصلاح یا مسدود نمی‌کند. برای <bdi dir="ltr">Artifact</bdi> قدیمی می‌توانید از <bdi dir="ltr">Generate SBOM</bdi> استفاده کنید و خروجی را از بخش <bdi dir="ltr">SBOM</bdi> همان <bdi dir="ltr">Artifact</bdi> بررسی کنید.</p>
+
 </div>
