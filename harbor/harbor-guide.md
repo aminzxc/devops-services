@@ -297,3 +297,5 @@ Installer و ایمیج‌های لازم، Artifactهای برنامه و دی�
 - [ ] مانیتورینگ، بکاپ و آزمایش Restore
 
 تمرین پیشنهادی: پروژهٔ آزمایشی بسازید، یک Image را با Robot Push کنید، اسکن را ببینید، با Kubernetes Pull کنید و در پایان رفتار Immutability و GC Dry Run را آزمایش کنید.
+
+</div>
