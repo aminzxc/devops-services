@@ -1,4 +1,4 @@
-<div dir="rtl">
+<div dir="rtl" lang="fa" style="text-align: right;">
 
 # راهنمای کاربردی Harbor برای مهندس DevOps
 
@@ -10,9 +10,14 @@
 
 نمونهٔ مسیر یک Image:
 
+<div dir="ltr" style="text-align: left;">
+
 ```text
 harbor.example.com/payments/api:1.4.2
 ```
+
+</div>
+
 
 | بخش | معنی |
 |---|---|
@@ -69,11 +74,18 @@ Harbor برای OCI مناسب است؛ برای مخزن عمومی Maven یا 
 
 Installer نسخهٔ انتخابی را از [Releaseهای رسمی](https://github.com/goharbor/harbor/releases) دریافت و بررسی کنید. داخل پوشهٔ استخراج‌شده:
 
+<div dir="ltr" style="text-align: left;">
+
 ```bash
 cp harbor.yml.tmpl harbor.yml
 ```
 
+</div>
+
+
 **فقط این فیلدها را در Template همان نسخه ویرایش کنید؛ این قطعه جایگزین کل فایل نیست.** مقدارهای `CHANGE_ME` و مسیر گواهی نمونه‌اند.
+
+<div dir="ltr" style="text-align: left;">
 
 ```yaml
 hostname: harbor.example.com
@@ -87,12 +99,20 @@ database:
 data_volume: /data
 ```
 
+</div>
+
+
 برای نمونهٔ HTTPS مستقیم، بخش `http` را در Template کامنت کنید. سپس:
+
+<div dir="ltr" style="text-align: left;">
 
 ```bash
 sudo ./install.sh --with-trivy
 docker compose ps
 ```
+
+</div>
+
 
 در `https://harbor.example.com` وارد شوید و پروژهٔ خصوصی `payments` بسازید. بدون `--with-trivy`، Installer به‌صورت پیش‌فرض Trivy را نصب نمی‌کند. [نصب رسمی](https://goharbor.io/docs/2.14.0/install-config/run-installer-script/)
 
@@ -111,6 +131,8 @@ docker compose ps
 
 ### مسیر نصب روی Kubernetes
 
+<div dir="ltr" style="text-align: left;">
+
 ```bash
 helm repo add harbor https://helm.goharbor.io
 helm repo update
@@ -122,6 +144,9 @@ helm upgrade --install harbor harbor/harbor \
   --namespace harbor --create-namespace \
   --version "$CHART_VERSION" -f values.yaml
 ```
+
+</div>
+
 
 فیلدهای مهم: `externalURL`، `expose.ingress.hosts.core`، `expose.tls`، `persistence`، `database`، `redis` و `trivy.enabled`. نسخهٔ Chart را Pin کنید؛ شمارهٔ Chart لزوماً با نسخهٔ Harbor یکی نیست. پیش از اجرا، TLS Secret، StorageClass و رمزها را مطابق Chart آماده کنید. [Chart رسمی](https://github.com/goharbor/harbor-helm)
 
@@ -187,6 +212,8 @@ helm upgrade --install harbor harbor/harbor \
 
 نمونهٔ Pipeline؛ متغیرها از CI تزریق می‌شوند و پروژه از قبل وجود دارد:
 
+<div dir="ltr" style="text-align: left;">
+
 ```bash
 set -eu
 : "${HARBOR_USER:?}" "${HARBOR_TOKEN:?}" "${CI_COMMIT_SHA:?}"
@@ -197,11 +224,16 @@ docker build -t "$IMAGE" .
 docker push "$IMAGE"
 ```
 
+</div>
+
+
 Push موفق به معنی Scan موفق نیست. Pipeline باید پایان اسکن را از API/رویداد بررسی کند و پیش از Deploy، آستانهٔ امنیتی را اعمال کند. از نمایش Secret با `set -x` جلوگیری کنید.
 
 ### Pull در Kubernetes
 
 یک Secret نوع `kubernetes.io/dockerconfigjson` با حساب Pull-only و نام `harbor-pull` در **همان Namespace برنامه** ایجاد کنید؛ ترجیحاً با مدیریت Secret موجود سازمان. سپس در Pod Template:
+
+<div dir="ltr" style="text-align: left;">
 
 ```yaml
 spec:
@@ -213,6 +245,9 @@ spec:
         - name: api
           image: harbor.example.com/payments/api:1.4.2
 ```
+
+</div>
+
 
 تگ نمونه باید قبلاً Push شده باشد؛ در Production ترجیحاً از Digest واقعی استفاده کنید. `imagePullSecrets` مشکل اعتبار گواهی را حل نمی‌کند؛ CA باید در Runtime نودها نیز معتبر باشد. [راهنمای Kubernetes](https://kubernetes.io/docs/tasks/configure-pod-container/pull-image-private-registry/)
 
