@@ -7,6 +7,7 @@ services:
     restart: always
     environment:
       - INSTALL4J_ADD_VM_PARAMS=-Xms512m -Xmx1024m -XX:MaxDirectMemorySize=1024m -Djava.util.prefs.userRoot=/nexus-data/javaprefs
+      - NEXUS_SECURITY_INITIAL_PASSWORD: pass
     volumes:
       - nexus-data:/nexus-data
     ports:
