@@ -1,4 +1,4 @@
-### on worker mode
+### on worker node
 ```
 mkdir -p /etc/containerd/certs.d/ip registery
 ```
